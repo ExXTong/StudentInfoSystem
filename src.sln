@@ -1,0 +1,54 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentInfoSystem.GradeService", "StudentInfoSystem.GradeService\StudentInfoSystem.GradeService.csproj", "{46030338-B479-06C1-FC5F-69C2439D55C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentInfoSystem.StudentService", "StudentInfoSystem.StudentService\StudentInfoSystem.StudentService.csproj", "{A7C57F80-59A3-DB29-0DF5-6BA296A20EF5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentInfoSystem.AuthService", "StudentInfoSystem.AuthService\StudentInfoSystem.AuthService.csproj", "{FC1E957A-45A7-6317-4119-9228775676DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentInfoSystem.Common", "StudentInfoSystem.Common\StudentInfoSystem.Common.csproj", "{5FE7E57B-386A-3C46-5230-C955C6AAE025}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentInfoSystem.Gateway", "StudentInfoSystem.Gateway\StudentInfoSystem.Gateway.csproj", "{8939969D-35F9-13EB-DE23-E1B73974D5FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudentInfoSystem.ScheduleService", "StudentInfoSystem.ScheduleService\StudentInfoSystem.ScheduleService.csproj", "{E120C158-5150-33F5-A730-35F31F937BB7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{46030338-B479-06C1-FC5F-69C2439D55C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46030338-B479-06C1-FC5F-69C2439D55C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46030338-B479-06C1-FC5F-69C2439D55C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46030338-B479-06C1-FC5F-69C2439D55C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7C57F80-59A3-DB29-0DF5-6BA296A20EF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7C57F80-59A3-DB29-0DF5-6BA296A20EF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7C57F80-59A3-DB29-0DF5-6BA296A20EF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7C57F80-59A3-DB29-0DF5-6BA296A20EF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC1E957A-45A7-6317-4119-9228775676DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC1E957A-45A7-6317-4119-9228775676DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC1E957A-45A7-6317-4119-9228775676DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC1E957A-45A7-6317-4119-9228775676DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FE7E57B-386A-3C46-5230-C955C6AAE025}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FE7E57B-386A-3C46-5230-C955C6AAE025}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FE7E57B-386A-3C46-5230-C955C6AAE025}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FE7E57B-386A-3C46-5230-C955C6AAE025}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8939969D-35F9-13EB-DE23-E1B73974D5FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8939969D-35F9-13EB-DE23-E1B73974D5FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8939969D-35F9-13EB-DE23-E1B73974D5FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8939969D-35F9-13EB-DE23-E1B73974D5FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E120C158-5150-33F5-A730-35F31F937BB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E120C158-5150-33F5-A730-35F31F937BB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E120C158-5150-33F5-A730-35F31F937BB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E120C158-5150-33F5-A730-35F31F937BB7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5FB1755A-0840-4033-B3E0-5067A3309ADD}
+	EndGlobalSection
+EndGlobal

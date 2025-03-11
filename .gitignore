@@ -1,0 +1,17 @@
+# Playwright 相关文件
+node_modules/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# .NET 构建结果
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+
+# 临时文件
+*.log
+*.tmp

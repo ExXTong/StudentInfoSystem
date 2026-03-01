@@ -10,8 +10,8 @@
     <PackageReference Include="Microsoft.Playwright" Version="1.50.0" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.74" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.1.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" Version="7.0.0" />
   </ItemGroup>
 

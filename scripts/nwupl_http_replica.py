@@ -41,6 +41,61 @@ EAMS_COURSE_TABLE_PAGE = "https://tam.nwupl.edu.cn/eams/courseTableForStd.action
 EAMS_COURSE_TABLE_DATA = "https://tam.nwupl.edu.cn/eams/courseTableForStd!courseTable.action"
 
 
+
+
+def random_string(length):
+    chars = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678"
+    import random
+    return "".join(random.choice(chars) for _ in range(length))
+
+
+def encrypt_password(password, aes_key):
+    """Replicates encryptPassword() in authserver's encrypt.js.
+
+    AES-128-CBC/PKCS7, plaintext = randomString(64) + password,
+    IV = randomString(16), key = aes_key (the pwdKey from login page).
+    Returns the same format as CryptoJS.AES.encrypt(...).toString().
+    """
+    if not aes_key:
+        return password
+
+    try:
+        from Cryptodome.Cipher import AES
+        from Cryptodome.Util.Padding import pad
+    except Exception:
+        try:
+            from Crypto.Cipher import AES
+            from Crypto.Util.Padding import pad
+        except Exception as exc:
+            raise RuntimeError("PyCryptodome is required for password encryption") from exc
+
+    data = (random_string(64) + password).encode("utf-8")
+    key = aes_key.encode("utf-8")
+    iv = random_string(16).encode("utf-8")
+
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    encrypted = cipher.encrypt(pad(data, AES.block_size))
+    # With an explicit key/iv WordArray, CryptoJS does not add the
+    # "Salted__" header; toString() is just base64(ciphertext).
+    return __import__("base64").b64encode(encrypted).decode()
+
+
+def extract_aes_key(html):
+    patterns = [
+        r'pwdDefaultEncryptSalt\s*=\s*["\']([^"\']+)["\']',
+        r'pwdEncryptSalt\s*=\s*["\']([^"\']+)["\']',
+        r'name="pwdEncryptSalt"[^>]*value="([^"]+)"',
+        r'id="pwdEncryptSalt"[^>]*value="([^"]+)"',
+        r'pwdKey\s*=\s*["\']([^"\']+)["\']',
+    ]
+    import re
+    for pat in patterns:
+        m = re.search(pat, html, re.I)
+        if m:
+            return m.group(1)
+    return None
+
+
 def need_requests():
     if requests is None:
         sys.exit("Python 'requests' module is required. Install with: pip install requests")
@@ -98,7 +153,7 @@ def analyze_har(har_path):
             print(f"      Location: {loc}")
 
 
-def live_login(session, username, password, service_url=EAMS_HOME):
+def live_login(session, username, password, args=None, service_url=EAMS_HOME):
     """Perform CAS login using only HTTP requests."""
     need_requests()
 
@@ -136,12 +191,27 @@ def live_login(session, username, password, service_url=EAMS_HOME):
         )
 
     print(f"    Found encryption hint: {encrypt_hint.group(0)}")
-    print("[!] Password encryption is not fully implemented in this skeleton.")
-    print("    If you have a pre-encrypted password, use --encrypted-password.")
+
+    # password encryption key from login page, or supplied via --aes-key
+    aes_key = args.aes_key if args and hasattr(args, "aes_key") else None
+    if not aes_key:
+        aes_key = extract_aes_key(html)
+    if not aes_key:
+        sys.exit(
+            "Could not find pwdEncryptSalt/pwdDefaultEncryptSalt on login page. "
+            "Pass it manually with --aes-key."
+        )
+
+    if getattr(args, "encrypted_password", None):
+        encrypted_password = args.encrypted_password
+        print("[i] Using pre-encrypted password from --encrypted-password")
+    else:
+        encrypted_password = encrypt_password(password, aes_key)
+        print("[i] Password encrypted with AES key found on login page")
 
     data = {
         "username": username,
-        "password": password,  # replace with encrypted value when implemented
+        "password": encrypted_password,
         "captcha": captcha,
         "rememberMe": "true",
         "_eventId": "submit",
@@ -246,6 +316,7 @@ def main():
     parser.add_argument("--username")
     parser.add_argument("--password")
     parser.add_argument("--encrypted-password", help="pre-encrypted password from a fresh HAR")
+    parser.add_argument("--aes-key", help="AES key used by the login page (pwdEncryptSalt/pwdDefaultEncryptSalt)")
     parser.add_argument("--semester-id", default="194")
     parser.add_argument("--project-id", default="1")
     parser.add_argument("--ids", default="676535")
@@ -268,7 +339,7 @@ def main():
         sys.exit("--live requires --username and --password (or --encrypted-password)")
 
     session = requests.Session()
-    live_login(session, args.username, args.password)
+    live_login(session, args.username, args.password, args)
 
     grade_html = fetch_grade(session, args.semester_id)
     print(f"\nGrade HTML length: {len(grade_html)}")

@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StudentInfoSystem.Common\StudentInfoSystem.Common.csproj" />
-    <ProjectReference Include="..\StudentInfoSystem.AuthService\StudentInfoSystem.AuthService.csproj" />
   </ItemGroup>
 
 </Project>

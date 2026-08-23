@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using StudentInfoSystem.Common.Models;
@@ -57,7 +56,7 @@ namespace StudentInfoSystem.Common.Services
         /// </summary>
         /// <param name="htmlContent">HTML内容</param>
         /// <returns>解析出的课程信息列表</returns>
-        public async Task<List<TeacherCourseInfo>> ParseAsync(string htmlContent)
+        public Task<List<TeacherCourseInfo>> ParseAsync(string htmlContent)
         {
             // 使用HtmlAgilityPack解析HTML
             var doc = new HtmlDocument();
@@ -72,7 +71,7 @@ namespace StudentInfoSystem.Common.Services
             // 匹配教师ID到课程
             MatchTeacherIds(courses, teacherIdMap);
             
-            return courses;
+            return Task.FromResult(courses);
         }
 
         /// <summary>

@@ -32,10 +32,33 @@ namespace StudentInfoSystem.ScheduleService.Services
         /// <returns>课表查询响应</returns>
         public async Task<ScheduleResponse> GetScheduleAsync(ScheduleRequest request)
         {
-            IPage page = null;
+            IPage? page = null;
             
             try
             {
+                if (request == null)
+                {
+                    return new ScheduleResponse { Success = false, ErrorMessage = "请求参数不能为空" };
+                }
+
+                if (string.IsNullOrWhiteSpace(request.TableType))
+                {
+                    request.TableType = "std";
+                }
+
+                if (request.TableType != "std" && request.TableType != "class")
+                {
+                    return new ScheduleResponse { Success = false, ErrorMessage = "课表类型仅支持 std 或 class" };
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Username) ||
+                    string.IsNullOrWhiteSpace(request.Password) ||
+                    string.IsNullOrWhiteSpace(request.Year) ||
+                    string.IsNullOrWhiteSpace(request.Term))
+                {
+                    return new ScheduleResponse { Success = false, ErrorMessage = "用户名、密码、学年和学期不能为空" };
+                }
+
                 _logger.LogInformation($"开始获取用户 {request.Username} 的课表信息");
                 
                 // 从池中获取页面
@@ -558,7 +581,7 @@ namespace StudentInfoSystem.ScheduleService.Services
         /// <summary>
         /// 解析教师ID
         /// </summary>
-        private async Task ParseTeacherIdsAsync(List<CourseInfo> courses, string htmlContent)
+        private Task ParseTeacherIdsAsync(List<CourseInfo> courses, string htmlContent)
         {
             try
             {
@@ -642,6 +665,8 @@ namespace StudentInfoSystem.ScheduleService.Services
             {
                 _logger.LogWarning($"解析教师ID时出错: {ex.Message}");
             }
+
+            return Task.CompletedTask;
         }
         /// <summary>
         /// 从HTML/JS中提取教师ID和名称映射

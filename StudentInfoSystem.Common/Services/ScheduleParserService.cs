@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using Newtonsoft.Json;
 using StudentInfoSystem.Common.Models;
 
 namespace StudentInfoSystem.Common.Services
@@ -139,141 +138,82 @@ namespace StudentInfoSystem.Common.Services
             return courses;
         }
         
+        private const int MaxWeekNumber = 54;
+
         /// <summary>
         /// 将周次信息转换为模式字符串
         /// </summary>
         private static string ConvertWeekInfoToPattern(string weekInfo)
         {
-            // 假设最多支持53周
-            var pattern = new char[53];
-            for (int i = 0; i < pattern.Length; i++)
+            var weeks = ParseWeekInfo(weekInfo);
+            var pattern = new char[MaxWeekNumber + 1];
+            Array.Fill(pattern, '0');
+
+            foreach (var week in weeks)
             {
-                pattern[i] = '0';
-            }
-            
-            // 解析周次信息，如"1-16周", "1,3,5,7,9周", "2-16双周"
-            if (weekInfo.Contains("-"))
-            {
-                // 连续周次
-                var parts = weekInfo.Split(new[] { '周', ',' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var part in parts)
+                if (week >= 1 && week <= MaxWeekNumber)
                 {
-                    if (part.Contains("-"))
-                    {
-                        var range = part.Split('-');
-                        if (range.Length == 2)
-                        {
-                            int start = int.Parse(range[0]);
-                            int end = int.Parse(range[1].Replace("双", "").Replace("单", ""));
-                            
-                            bool isEven = part.Contains("双");
-                            bool isOdd = part.Contains("单");
-                            
-                            for (int i = start; i <= end; i++)
-                            {
-                                if ((isEven && i % 2 == 0) || (isOdd && i % 2 == 1) || (!isEven && !isOdd))
-                                {
-                                    pattern[i] = '1';
-                                }
-                            }
-                        }
-                    }
-                    else if (int.TryParse(part, out int week))
-                    {
-                        pattern[week] = '1';
-                    }
+                    pattern[week] = '1';
                 }
             }
-            else if (weekInfo.Contains(","))
-            {
-                // 不连续周次
-                var weeks = weekInfo.Replace("周", "").Split(',');
-                foreach (var week in weeks)
-                {
-                    if (int.TryParse(week, out int weekNum))
-                    {
-                        pattern[weekNum] = '1';
-                    }
-                }
-            }
-            else
-            {
-                // 单个周次
-                var week = weekInfo.Replace("周", "");
-                if (int.TryParse(week, out int weekNum))
-                {
-                    pattern[weekNum] = '1';
-                }
-            }
-            
+
             return new string(pattern);
         }
-        
+
         /// <summary>
         /// 解析周次信息为周次列表
         /// </summary>
         private static List<int> ParseWeekInfo(string weekInfo)
         {
             var weeks = new List<int>();
-            
-            // 解析周次信息，如"1-16周", "1,3,5,7,9周", "2-16双周"
-            if (weekInfo.Contains("-"))
+
+            if (string.IsNullOrWhiteSpace(weekInfo))
             {
-                // 连续周次
-                var parts = weekInfo.Split(new[] { '周', ',' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var part in parts)
+                return weeks;
+            }
+
+            var parts = weekInfo.Replace("周", "").Split(new[] { ',', '，' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var part in parts)
+            {
+                var trimmed = part.Trim();
+                if (trimmed.Length == 0)
                 {
-                    if (part.Contains("-"))
+                    continue;
+                }
+
+                if (trimmed.Contains("-"))
+                {
+                    var range = trimmed.Split('-');
+                    if (range.Length == 2 &&
+                        int.TryParse(range[0].Trim(), out int start) &&
+                        int.TryParse(range[1].Trim().Replace("双", "").Replace("单", ""), out int end))
                     {
-                        var range = part.Split('-');
-                        if (range.Length == 2)
+                        bool isEven = trimmed.Contains("双");
+                        bool isOdd = trimmed.Contains("单");
+
+                        for (int i = start; i <= end; i++)
                         {
-                            int start = int.Parse(range[0]);
-                            int end = int.Parse(range[1].Replace("双", "").Replace("单", ""));
-                            
-                            bool isEven = part.Contains("双");
-                            bool isOdd = part.Contains("单");
-                            
-                            for (int i = start; i <= end; i++)
+                            if (i < 1 || i > MaxWeekNumber)
                             {
-                                if ((isEven && i % 2 == 0) || (isOdd && i % 2 == 1) || (!isEven && !isOdd))
-                                {
-                                    weeks.Add(i);
-                                }
+                                continue;
+                            }
+
+                            if ((isEven && i % 2 == 0) || (isOdd && i % 2 == 1) || (!isEven && !isOdd))
+                            {
+                                weeks.Add(i);
                             }
                         }
                     }
-                    else if (int.TryParse(part, out int week))
-                    {
-                        weeks.Add(week);
-                    }
                 }
-            }
-            else if (weekInfo.Contains(","))
-            {
-                // 不连续周次
-                var weekParts = weekInfo.Replace("周", "").Split(',');
-                foreach (var week in weekParts)
+                else if (int.TryParse(trimmed, out int week) && week >= 1 && week <= MaxWeekNumber)
                 {
-                    if (int.TryParse(week, out int weekNum))
-                    {
-                        weeks.Add(weekNum);
-                    }
+                    weeks.Add(week);
                 }
             }
-            else
-            {
-                // 单个周次
-                var week = weekInfo.Replace("周", "");
-                if (int.TryParse(week, out int weekNum))
-                {
-                    weeks.Add(weekNum);
-                }
-            }
-            
-            return weeks;
+
+            return weeks.Distinct().OrderBy(w => w).ToList();
         }
-        
+
         /// <summary>
         /// 生成周视图课表
         /// </summary>

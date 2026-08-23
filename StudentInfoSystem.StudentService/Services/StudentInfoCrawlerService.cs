@@ -36,7 +36,7 @@ namespace StudentInfoSystem.StudentService.Services
         /// </summary>
         public async Task<StudentInfo> GetStudentInfoByScrapingAsync(string username, string password)
         {
-            IPage page = null;
+            IPage? page = null;
             try
             {
                 // 获取信息前先获取锁，确保同一时间只有一个爬虫任务

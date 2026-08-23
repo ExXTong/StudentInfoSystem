@@ -10,6 +10,7 @@ using System.IO;
 using System;
 using System.Reflection;
 using StudentInfoSystem.Common.Middleware;
+using StudentInfoSystem.Common.Security;
 using System.Text;
 using StudentInfoSystem.Common.Filters;
 
@@ -34,8 +35,7 @@ builder.Services.AddScoped<LoginService>(provider => {
     var logger = provider.GetRequiredService<ILogger<LoginService>>();
     
     // 从配置获取JWT配置，如果没有则使用默认值
-    string jwtSecret = builder.Configuration["Jwt:Key"] ?? 
-                      "YourSuperSecretKeyForJWTThatIsLongEnough";
+    string jwtSecret = JwtConfiguration.GetSigningKey(builder.Configuration);
     string issuer = builder.Configuration["Jwt:Issuer"] ?? "StudentInfoSystem";
     string audience = builder.Configuration["Jwt:Audience"] ?? "StudentInfoSystemUsers";
     

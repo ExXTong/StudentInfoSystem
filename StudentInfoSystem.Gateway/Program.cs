@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using StudentInfoSystem.Common.Security;
 using Yarp.ReverseProxy.Transforms;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -35,7 +36,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtConfig["Issuer"],
         ValidAudience = jwtConfig["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig["Key"])),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtConfiguration.GetSigningKey(builder.Configuration))),
         ClockSkew = TimeSpan.Zero // 设置为零以严格验证令牌过期时间
     };
 });
@@ -87,7 +88,14 @@ app.MapReverseProxy(proxyPipeline =>
     {
         // 使用TryAdd而不是Add，避免重复添加
         context.Request.Headers.TryAdd("X-Gateway-Source", "StudentInfoGateway");
-        
+
+        // 如果配置了共享密钥，则传给下游服务用于二次校验
+        var gatewaySecret = app.Configuration["Security:GatewaySecret"];
+        if (!string.IsNullOrWhiteSpace(gatewaySecret))
+        {
+            context.Request.Headers.TryAdd("X-Gateway-Secret", gatewaySecret);
+        }
+
         // 如果用户已经通过身份验证，提取用户信息并传递给下游服务
         if (context.User.Identity?.IsAuthenticated == true)
         {

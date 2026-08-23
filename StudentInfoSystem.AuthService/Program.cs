@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 //using StudentInfoSystem.Common.Services; // 更新引用
 using StudentInfoSystem.AuthService.Services; // 添加这一行，引入正确的命名空间
 using StudentInfoSystem.Common.Middleware;
+using StudentInfoSystem.Common.Security;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +26,7 @@ builder.Services.AddSingleton<IBrowserManager, BrowserManager>();
 builder.Services.AddScoped<LoginService>(provider => {
     var config = provider.GetRequiredService<IConfiguration>();
     var browserManager = provider.GetRequiredService<IBrowserManager>();
-    var jwtSecret = config["Jwt:Key"] ?? "DefaultSecretKeyForDevelopment";
+    var jwtSecret = JwtConfiguration.GetSigningKey(config);
     var issuer = config["Jwt:Issuer"] ?? "StudentInfoSystem";
     var audience = config["Jwt:Audience"] ?? "StudentInfoSystemUsers";
     
@@ -44,7 +45,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "DefaultSecretKeyForDevelopment"))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtConfiguration.GetSigningKey(builder.Configuration)))
         };
     });
 

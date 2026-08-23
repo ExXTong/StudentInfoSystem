@@ -62,7 +62,7 @@ namespace StudentInfoSystem.GradeService.Services
         /// <param name="term">学期，"1"=第一学期，"2"=第二学期，如果要查看所有学期成绩，设置为null</param>
         /// <param name="allTerms">是否获取所有学期的成绩，当为true时忽略year和term参数</param>
         /// <returns>成绩汇总信息</returns>
-        public async Task<GradeSummary> GetGradesAsync(string username, string password, string year = null, string term = null, bool allTerms = false)
+        public async Task<GradeSummary> GetGradesAsync(string username, string password, string? year = null, string? term = null, bool allTerms = false)
         {
             IPage? page = null;
             try
@@ -187,7 +187,21 @@ namespace StudentInfoSystem.GradeService.Services
                 // 解析成绩数据
                 LogInfo("解析成绩数据...");
                 var grades = ParseGradesFromHtml(pageContent);
-                
+
+                // 根据请求参数过滤学年/学期
+                if (!allTerms)
+                {
+                    if (!string.IsNullOrWhiteSpace(year))
+                    {
+                        grades = grades.Where(g => string.Equals(g.Year?.Trim(), year.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(term))
+                    {
+                        grades = grades.Where(g => string.Equals(g.Term?.Trim(), term.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+                    }
+                }
+
                 // 计算成绩统计信息
                 var summary = CalculateGradeSummary(grades);
                 

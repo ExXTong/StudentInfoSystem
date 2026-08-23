@@ -244,24 +244,46 @@ namespace StudentInfoSystem.Common.Services
         public static void SaveAsCsv(StudentInfo studentInfo, string filePath)
         {
             var csv = new StringBuilder();
-            
+
             // 添加基本信息
             csv.AppendLine("字段,值");
-            csv.AppendLine($"学号,{studentInfo.StudentId}");
-            csv.AppendLine($"姓名,{studentInfo.Name}");
-            csv.AppendLine($"英文姓名,{studentInfo.EnglishName}");
-            // ... 其他字段
+            csv.AppendLine($"学号,{CsvEscape(studentInfo.StudentId)}");
+            csv.AppendLine($"姓名,{CsvEscape(studentInfo.Name)}");
+            csv.AppendLine($"英文姓名,{CsvEscape(studentInfo.EnglishName)}");
+            csv.AppendLine($"性别,{CsvEscape(studentInfo.Gender)}");
+            csv.AppendLine($"院系,{CsvEscape(studentInfo.Department)}");
+            csv.AppendLine($"专业,{CsvEscape(studentInfo.Major)}");
 
             // 添加家庭成员信息
-            csv.AppendLine("\n家庭成员信息:");
+            csv.AppendLine();
+            csv.AppendLine("家庭成员信息:");
             csv.AppendLine("姓名,关系,是否监护人,证件类型,证件号码,联系电话,工作单位,工作地址");
             foreach (var member in studentInfo.FamilyMembers)
             {
-                csv.AppendLine($"{member.Name},{member.Relationship},{member.IsGuardian},{member.IdType}," +
-                               $"{member.IdNumber},{member.Phone},{member.WorkUnit},{member.WorkAddress}");
+                csv.AppendLine(
+                    $"{CsvEscape(member.Name)},{CsvEscape(member.Relationship)},{CsvEscape(member.IsGuardian)},{CsvEscape(member.IdType)}," +
+                    $"{CsvEscape(member.IdNumber)},{CsvEscape(member.Phone)},{CsvEscape(member.WorkUnit)},{CsvEscape(member.WorkAddress)}");
             }
 
             File.WriteAllText(filePath, csv.ToString(), Encoding.UTF8);
+        }
+
+        /// <summary>
+        /// CSV 转义：字段包含逗号、引号或换行时按 RFC 4180 处理。
+        /// </summary>
+        private static string CsvEscape(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            if (value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r'))
+            {
+                return $"\"{value.Replace("\"", "\"\"")}\"";
+            }
+
+            return value;
         }
     }
 }

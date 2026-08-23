@@ -27,7 +27,7 @@ namespace StudentInfoSystem.Common.Services
 
         public async Task<LoginResponse> LoginAsync(LoginRequest request)
         {
-            IPage page = null;
+            IPage? page = null;
             try
             {
                 // 从池中获取页面
@@ -114,7 +114,7 @@ namespace StudentInfoSystem.Common.Services
             return Guid.NewGuid().ToString();
         }
 
-        public async Task<TokenValidationResponse> ValidateTokenAsync(string token)
+        public Task<TokenValidationResponse> ValidateTokenAsync(string token)
         {
             try
             {
@@ -143,25 +143,25 @@ namespace StudentInfoSystem.Common.Services
                     Permissions = new List<string>() // 从claims中获取权限
                 };
 
-                return new TokenValidationResponse
+                return Task.FromResult(new TokenValidationResponse
                 {
                     IsValid = true,
                     User = userInfo
-                };
+                });
             }
             catch (Exception ex)
             {
-                return new TokenValidationResponse
+                return Task.FromResult(new TokenValidationResponse
                 {
                     IsValid = false,
                     ErrorMessage = ex.Message
-                };
+                });
             }
         }
 
         public async Task<bool> LogoutAsync()
         {
-            IPage page = null;
+            IPage? page = null;
             try
             {
                 // 从池中获取页面

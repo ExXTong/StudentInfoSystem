@@ -12,6 +12,7 @@
 | iOS | .NET iOS | 单用户本地 App |
 | 核心库 | StudentInfoSystem.Core | 本地存储/会话逻辑 |
 | 门户库 | StudentInfoSystem.Portal | 唯一 HTTP 客户端/解析器/模型（Web 与 App 共用） |
+| 会话库 | StudentInfoSystem.Core.Session.PortalSession | 三端 App 共用登录/更新会话逻辑 |
 
 ## 运行环境要求
 

@@ -7,10 +7,11 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Android.Security.Keystore;
+using StudentInfoSystem.Core.Security;
 
 namespace StudentInfoSystem.Android;
 
-public class SecureCredentialStore
+public class SecureCredentialStore : ISecureCredentialStore
 {
     private const string KeyName = "sis_credential_key";
     private const string PrefName = "secure_credentials";

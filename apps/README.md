@@ -1,6 +1,6 @@
 # 多端 App
 
-三端本地 App 共用 `StudentInfoSystem.Core`。
+三端本地 App 共用 `StudentInfoSystem.Core` 和 `StudentInfoSystem.Portal`，登录/更新会话逻辑统一由 `PortalSession` 提供。
 
 ## 通用登录逻辑
 

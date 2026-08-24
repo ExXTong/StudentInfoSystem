@@ -1,11 +1,12 @@
 using Foundation;
 using Security;
+using StudentInfoSystem.Core.Security;
 using System;
 using System.Text;
 
 namespace StudentInfoSystem.iOS;
 
-public class SecureCredentialStore
+public class SecureCredentialStore : ISecureCredentialStore
 {
     private const string Service = "com.example.studentinfosystem";
     private readonly string _account = "default";

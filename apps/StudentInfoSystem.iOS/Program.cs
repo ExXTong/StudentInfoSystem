@@ -1,10 +1,10 @@
 using Foundation;
 using UIKit;
-using Microsoft.Extensions.Logging.Abstractions;
-using StudentInfoSystem.Portal;
+using StudentInfoSystem.Core.Session;
 using StudentInfoSystem.Core.Services;
 using System.Text.RegularExpressions;
 using StudentInfoSystem.Core.Storage;
+using StudentInfoSystem.Portal;
 
 namespace StudentInfoSystem.iOS;
 
@@ -37,22 +37,19 @@ public class ViewController : UIViewController
     private UIButton? _loginButton;
     private UIButton? _fetchButton;
     private UIButton? _settingsButton;
-    private IStudentPortalClient? _portal;
-    private bool _loggedIn;
-    private bool _portalLoggedIn;
-    private string? _sessionUsername;
-    private string? _sessionPassword;
     private string? _lastGradeText;
     private UIButton? _exportButton;
     private UIButton? _scheduleButton;
     private UIButton? _clearButton;
     private readonly LocalDataStore _store = new();
     private readonly SecureCredentialStore _encryptedStore = new();
+    private PortalSession _session = null!;
     private UITextView? _textView;
 
     public override void ViewDidLoad()
     {
         base.ViewDidLoad();
+        _session = new PortalSession(CreateOptions(), _store, _encryptedStore);
 
         var label = new UILabel
         {
@@ -160,52 +157,13 @@ public class ViewController : UIViewController
 
         _status!.Text = "正在验证...";
         _loginButton!.Enabled = false;
-
         try
         {
-            if (_store.VerifyLocalCredentials(username, password))
-            {
-                _loggedIn = true;
-                _portalLoggedIn = false;
-                _fetchButton!.Enabled = true;
-                _scheduleButton!.Enabled = true;
-                _sessionUsername = username;
-                _sessionPassword = password;
-                Title = $"学生信息服务 - {username}";
-                _status.Text = "本地登录成功";
-                return;
-            }
-
-            var options = new StudentPortalOptions
-            {
-                AuthServerBaseUrl = "https://authserver.nwupl.edu.cn",
-                EamsBaseUrl = "https://tam.nwupl.edu.cn",
-                ServiceUrl = "https://tam.nwupl.edu.cn/eams/homeExt.action",
-                Proxy = NSUserDefaults.StandardUserDefaults.StringForKey("proxy") ?? "",
-                TimeoutSeconds = 60,
-                FingerprintCookies = NSUserDefaults.StandardUserDefaults.StringForKey("cookie") ?? "",
-                UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148"
-            };
-
-            _portal = new HttpStudentPortalClient(options, NullLogger<HttpStudentPortalClient>.Instance);
-            var ok = await _portal.LoginAsync(username, password);
-            if (ok)
-            {
-                _store.SaveCredentials(username, password);
-                _encryptedStore.SavePassword(username, password);
-                _loggedIn = true;
-                _portalLoggedIn = true;
-                _fetchButton!.Enabled = true;
-                _scheduleButton!.Enabled = true;
-                _sessionUsername = username;
-                _sessionPassword = password;
-                Title = $"学生信息服务 - {username}";
-                _status.Text = "登录成功，已保存本地凭据";
-            }
-            else
-            {
-                _status.Text = "登录失败，请检查账号密码";
-            }
+            var result = await _session.LoginAsync(username, password);
+            Title = result.Success ? $"学生信息服务 - {username}" : "学生信息服务";
+            _status.Text = result.Message;
+            _fetchButton!.Enabled = result.Success;
+            _scheduleButton!.Enabled = result.Success;
         }
         catch (Exception ex)
         {
@@ -217,47 +175,9 @@ public class ViewController : UIViewController
         }
     }
 
-    private async System.Threading.Tasks.Task EnsurePortalLoginAsync()
-    {
-        if (_portalLoggedIn) return;
-
-        if (string.IsNullOrEmpty(_sessionUsername) || string.IsNullOrEmpty(_sessionPassword))
-        {
-            var saved = _encryptedStore.LoadPassword();
-            if (saved == null)
-            {
-                throw new Exception("未找到可用凭据，请先登录");
-            }
-            _sessionUsername = saved.Value.Username;
-            _sessionPassword = saved.Value.Password;
-        }
-
-        if (_portal == null)
-        {
-            var options = new StudentPortalOptions
-            {
-                AuthServerBaseUrl = "https://authserver.nwupl.edu.cn",
-                EamsBaseUrl = "https://tam.nwupl.edu.cn",
-                ServiceUrl = "https://tam.nwupl.edu.cn/eams/homeExt.action",
-                Proxy = NSUserDefaults.StandardUserDefaults.StringForKey("proxy") ?? "",
-                TimeoutSeconds = 60,
-                FingerprintCookies = NSUserDefaults.StandardUserDefaults.StringForKey("cookie") ?? "",
-                UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148"
-            };
-            _portal = new HttpStudentPortalClient(options, NullLogger<HttpStudentPortalClient>.Instance);
-        }
-
-        var ok = await _portal.LoginAsync(_sessionUsername, _sessionPassword);
-        if (!ok)
-        {
-            throw new Exception("教务系统登录失败，请重新验证账号密码");
-        }
-        _portalLoggedIn = true;
-    }
-
     private async void OnFetchClick(object? sender, EventArgs e)
     {
-        if (_portal == null || !_loggedIn)
+        if (!_session.IsLoggedIn)
         {
             _status!.Text = "请先登录";
             return;
@@ -267,11 +187,12 @@ public class ViewController : UIViewController
         _fetchButton!.Enabled = false;
         try
         {
-            await EnsurePortalLoginAsync();
-            var gradeHtml = await _portal!.GetHistoryGradeAsync();
+            await _session.EnsurePortalLoginAsync();
+            var portal = _session.Portal;
+            var gradeHtml = await portal.GetHistoryGradeAsync();
             var grades = GradeParser.ParseGrades(gradeHtml ?? "");
 
-            var detailHtml = await _portal.GetStudentDetailAsync();
+            var detailHtml = await _session.Portal.GetStudentDetailAsync();
             var student = StudentInfoParser.ParseStudentInfoFromHtml(detailHtml ?? "");
 
             _status.Text = student == null
@@ -299,7 +220,7 @@ public class ViewController : UIViewController
 
     private async void OnScheduleClick(object? sender, EventArgs e)
     {
-        if (_portal == null || !_loggedIn)
+        if (!_session.IsLoggedIn)
         {
             _status!.Text = "请先登录";
             return;
@@ -309,13 +230,14 @@ public class ViewController : UIViewController
         _scheduleButton!.Enabled = false;
         try
         {
-            await EnsurePortalLoginAsync();
-            var page = await _portal!.GetCourseTablePageAsync();
+            await _session.EnsurePortalLoginAsync();
+            var portal = _session.Portal;
+            var page = await portal.GetCourseTablePageAsync();
             var semMatch = Regex.Match(page ?? "", @"name=""semester.id""\s+value=""([^""]*)""");
             var semesterId = semMatch.Success ? semMatch.Groups[1].Value : "194";
             var idsMatch = Regex.Match(page ?? "", @"bg\.form\.addInput\(form,""ids"",""(\d+)""\)");
             var ids = idsMatch.Success ? idsMatch.Groups[1].Value : "676535";
-            var html = await _portal.GetCourseTableDataAsync(semesterId, "1", ids, "std");
+            var html = await portal.GetCourseTableDataAsync(semesterId, "1", ids, "std");
             var list = SimpleScheduleParser.ParseScheduleSummary(html ?? "");
             _status.Text = $"课表课程 {list.Count} 条";
             _textView!.Text = list.Count == 0 ? "未解析到课程数据" : string.Join("\n", list);
@@ -328,6 +250,21 @@ public class ViewController : UIViewController
         {
             _scheduleButton.Enabled = true;
         }
+    }
+
+
+    private StudentPortalOptions CreateOptions()
+    {
+        return new StudentPortalOptions
+        {
+            AuthServerBaseUrl = "https://authserver.nwupl.edu.cn",
+            EamsBaseUrl = "https://tam.nwupl.edu.cn",
+            ServiceUrl = "https://tam.nwupl.edu.cn/eams/homeExt.action",
+            Proxy = NSUserDefaults.StandardUserDefaults.StringForKey("proxy") ?? "",
+            TimeoutSeconds = 60,
+            FingerprintCookies = NSUserDefaults.StandardUserDefaults.StringForKey("cookie") ?? "",
+            UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148"
+        };
     }
 
     private void OnExportClick(object? sender, EventArgs e)
@@ -374,14 +311,8 @@ public class ViewController : UIViewController
             return;
         }
 
-        _store.ClearUserData(uname);
-        _store.ClearCredentials();
-        _encryptedStore.Clear();
-        _sessionUsername = null;
-        _sessionPassword = null;
-        _loggedIn = false;
-        _portalLoggedIn = false;
+        _session.Clear();
         _textView!.Text = "";
-        _status.Text = "本地缓存和内存凭据已清除";
+        _status.Text = "本地缓存和凭据已清除";
     }
 }

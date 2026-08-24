@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using StudentInfoSystem.Core.Security;
 using StudentInfoSystem.Core.Storage;
 
 namespace StudentInfoSystem.Desktop;
@@ -10,7 +11,7 @@ namespace StudentInfoSystem.Desktop;
 /// 桌面端安全凭据存储：
 /// Windows 使用 DPAPI，其他平台回退到 AES 加密本地文件。
 /// </summary>
-public class SecureCredentialStore
+public class SecureCredentialStore : ISecureCredentialStore
 {
     private readonly EncryptedCredentialStore _fallback = new();
     private readonly string _dataFile = Path.Combine(

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using StudentInfoSystem.Portal.Models;
 
 namespace StudentInfoSystem.ScheduleService.Models
 {

@@ -1,4 +1,4 @@
-using StudentInfoSystem.Common.Models;
+using StudentInfoSystem.Portal.Models;
 using System;
 
 namespace StudentInfoSystem.AuthService.Services

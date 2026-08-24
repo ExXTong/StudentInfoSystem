@@ -1,4 +1,4 @@
-using StudentInfoSystem.Common.Models;
+using StudentInfoSystem.Portal.Models;
 using StudentInfoSystem.Portal;
 using System;
 using System.IO;

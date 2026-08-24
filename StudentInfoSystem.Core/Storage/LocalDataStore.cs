@@ -4,7 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
-using StudentInfoSystem.Core.Models;
+using StudentInfoSystem.Portal.Models;
 
 namespace StudentInfoSystem.Core.Storage;
 

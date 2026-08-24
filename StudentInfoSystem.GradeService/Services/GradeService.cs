@@ -1,5 +1,5 @@
-using StudentInfoSystem.Common.Models;
-using StudentInfoSystem.Common.Services;
+using StudentInfoSystem.Portal.Models;
+using StudentInfoSystem.Portal.Services;
 using StudentInfoSystem.Portal;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;

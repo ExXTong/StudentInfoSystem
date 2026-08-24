@@ -1,7 +1,7 @@
 using Foundation;
 using UIKit;
 using StudentInfoSystem.Core.Session;
-using StudentInfoSystem.Core.Services;
+using StudentInfoSystem.Portal.Services;
 using System.Text.RegularExpressions;
 using StudentInfoSystem.Core.Storage;
 using StudentInfoSystem.Portal;

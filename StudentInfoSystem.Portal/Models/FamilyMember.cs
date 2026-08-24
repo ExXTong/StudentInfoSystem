@@ -1,6 +1,6 @@
 using System;
 
-namespace StudentInfoSystem.Common.Models
+namespace StudentInfoSystem.Portal.Models
 {
     public class FamilyMember
     {

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace StudentInfoSystem.Common.Models
+namespace StudentInfoSystem.Portal.Models
 {
     /// <summary>
     /// 课程表请求参数

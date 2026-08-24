@@ -1,7 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using StudentInfoSystem.Core.Services;
+using StudentInfoSystem.Portal.Services;
 using StudentInfoSystem.Core.Session;
 using StudentInfoSystem.Core.Storage;
 using StudentInfoSystem.Portal;

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using StudentInfoSystem.Common.Models;
+using StudentInfoSystem.Portal.Models;
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;

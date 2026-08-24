@@ -97,6 +97,7 @@ public class PortalSession
     public void Clear()
     {
         _store.ClearUserData(_sessionUsername ?? "default");
+        _store.ClearCredentials();
         _secureStore.Clear();
         _sessionUsername = null;
         _sessionPassword = null;

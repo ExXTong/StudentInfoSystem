@@ -3,8 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using StudentInfoSystem.Common.Models;
-using StudentInfoSystem.Common.Services;
+using StudentInfoSystem.Portal.Models;
+using StudentInfoSystem.Portal.Services;
 using StudentInfoSystem.Portal;
 
 namespace StudentInfoSystem.StudentService.Services

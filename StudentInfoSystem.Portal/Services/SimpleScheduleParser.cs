@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace StudentInfoSystem.Core.Services;
+namespace StudentInfoSystem.Portal.Services;
 
 public static class SimpleScheduleParser
 {

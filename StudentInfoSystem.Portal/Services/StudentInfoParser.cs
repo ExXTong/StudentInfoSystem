@@ -5,9 +5,9 @@ using System.Text;
 using HtmlAgilityPack;
 using System.Text.Json;
 using System.Linq;
-using StudentInfoSystem.Common.Models;
+using StudentInfoSystem.Portal.Models;
 
-namespace StudentInfoSystem.Common.Services
+namespace StudentInfoSystem.Portal.Services
 {
     public static class StudentInfoParser
     {

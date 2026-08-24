@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using StudentInfoSystem.Common.Models;
+using StudentInfoSystem.Portal.Models;
 
-namespace StudentInfoSystem.Common.Services
+namespace StudentInfoSystem.Portal.Services
 {
     /// <summary>
     /// 教师课程信息类，存储解析后的课程教师数据

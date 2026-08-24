@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System;
 using StudentInfoSystem.AuthService.Services;
-using StudentInfoSystem.Common.Models;  // 添加这个引用
+using StudentInfoSystem.Portal.Models;  // 添加这个引用
 
 namespace StudentInfoSystem.AuthService.Controllers
 {

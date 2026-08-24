@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace StudentInfoSystem.Core.Models
+namespace StudentInfoSystem.Portal.Models
 {
     public class StudentInfo
     {

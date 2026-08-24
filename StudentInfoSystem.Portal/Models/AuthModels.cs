@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace StudentInfoSystem.Common.Models
+namespace StudentInfoSystem.Portal.Models
 {
     public class LoginRequest
     {

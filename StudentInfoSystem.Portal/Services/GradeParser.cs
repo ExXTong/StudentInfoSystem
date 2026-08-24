@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using HtmlAgilityPack;
-using StudentInfoSystem.Common.Models;
+using StudentInfoSystem.Portal.Models;
 
-namespace StudentInfoSystem.Common.Services
+namespace StudentInfoSystem.Portal.Services
 {
     public static class GradeParser
     {

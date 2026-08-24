@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using StudentInfoSystem.Common.Models;
+using StudentInfoSystem.Portal.Models;
 using StudentInfoSystem.GradeService.Services;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;

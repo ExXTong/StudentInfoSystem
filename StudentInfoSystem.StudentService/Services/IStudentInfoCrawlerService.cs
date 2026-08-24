@@ -1,4 +1,4 @@
-using StudentInfoSystem.Common.Models;
+using StudentInfoSystem.Portal.Models;
 using System.Threading.Tasks;
 
 namespace StudentInfoSystem.StudentService.Services

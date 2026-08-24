@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using StudentInfoSystem.Common.Models;
+using StudentInfoSystem.Portal.Models;
 using StudentInfoSystem.StudentService.Services;
 using System;
 using System.Threading.Tasks;

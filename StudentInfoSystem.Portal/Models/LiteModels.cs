@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace StudentInfoSystem.Common.Models
+namespace StudentInfoSystem.Portal.Models
 {
     /// <summary>
     /// 轻量级课程信息类（用于序列化）

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using StudentInfoSystem.Core.Models;
+using StudentInfoSystem.Portal.Models;
 
-namespace StudentInfoSystem.Core.Services
+namespace StudentInfoSystem.Portal.Services
 {
     public static class ScheduleParserService
     {

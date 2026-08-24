@@ -1,31 +1,39 @@
 # StudentInfoSystem
 
-学生信息/成绩/课表查询系统，基于 .NET 8 微服务和 React + Vite 前端。
+学生课表 / 成绩 / 个人信息查询系统。
 
-## 项目结构
+## 项目形态
 
-| 项目 | 说明 | 默认端口 |
+| 端 | 技术 | 说明 |
 |---|---|---|
-| `StudentInfoSystem.Gateway` | YARP 反向代理网关，统一 API 入口，JWT 认证 | 10000 / 10010 (HTTPS) |
-| `StudentInfoSystem.AuthService` | 登录认证，签发 JWT | 10001 |
-| `StudentInfoSystem.StudentService` | 学生信息爬取/查询 | 10002 |
-| `StudentInfoSystem.GradeService` | 成绩查询 | 10003 |
-| `StudentInfoSystem.ScheduleService` | 课表查询 | 10004 |
-| `StudentInfoSystem.Common` | 公共模型、解析器、浏览器管理、安全中间件 | - |
-| `course-schedule-frontend` | React + Vite 前端 | 5173 |
+| 网页端 | React + .NET 10 | 多用户 + 管理后台 + PWA |
+| 桌面端 | Avalonia UI | 单用户本地 App |
+| Android | .NET Android | 单用户本地 App |
+| iOS | .NET iOS | 单用户本地 App |
+| 核心库 | StudentInfoSystem.Core | 三端共享登录/抓取/解析/存储 |
 
-## 运行
+## 运行环境要求
 
-### 后端
+- .NET SDK 10.0.400+
+- Node.js / npm
+- Android 端额外需要：
+  - .NET Android workload
+  - Android SDK
+
+## 网页端快速启动
 
 ```bash
-dotnet restore src.sln
-dotnet run --project StudentInfoSystem.Gateway
+dotnet build src.sln
+./scripts/start-local.sh
 ```
 
-然后按需启动 AuthService、StudentService、GradeService、ScheduleService。
+打开：
 
-### 前端
+```text
+http://localhost:5173
+```
+
+前端开发模式：
 
 ```bash
 cd course-schedule-frontend
@@ -33,13 +41,67 @@ npm install
 npm run dev
 ```
 
-前端默认请求 `https://localhost:10010/api`，可通过环境变量覆盖：
+## 管理后台
+
+- 管理员账号：`root`
+- 默认密码：`root123456`（生产环境请修改）
+- root 只显示管理功能
+- 非管理员不显示管理入口
+
+管理功能：
+
+- 用户禁用 / 启用 / 重置
+- 访问统计
+- 登录历史
+- 公告管理
+- 系统参数配置
+- 本地数据备份 / 导入
+
+## 登录逻辑
+
+- 首次登录：验证教务系统成功后保存凭据
+- 后续登录：使用本地保存的凭据验证，不连接教务系统
+- 更新数据：才连接教务系统获取最新数据
+- 本地端密码使用系统安全存储（Windows DPAPI / Android Keystore / iOS Keychain）
+- 网页端每次更新数据需重新输入密码
+
+## PWA
+
+网页端已支持 PWA：
+
+- 可安装到桌面 / 手机
+- 离线缓存
+- 构建：
 
 ```bash
-VITE_API_BASE_URL=https://your-api.example.com/api npm run dev
+cd course-schedule-frontend
+npm run build
 ```
 
-## 配置说明
+## 本地 App
 
-- JWT 签名密钥通过环境变量 `JWT__KEY` 或配置项 `Jwt:Key` 注入；生产环境不要使用仓库中的开发密钥。
-- 若配置 `Security:GatewaySecret`，网关会向下游服务传递 `X-Gateway-Secret`，下游服务会校验该请求头，防止直接访问时伪造来源。
+```text
+apps/StudentInfoSystem.Desktop   Avalonia 桌面版
+apps/StudentInfoSystem.Android   Android 版
+apps/StudentInfoSystem.iOS       iOS 版
+```
+
+详细说明见：
+
+```text
+apps/README.md
+```
+
+## 核心库
+
+```text
+StudentInfoSystem.Core
+```
+
+包含：
+
+- 学生门户 HTTP 客户端
+- CAS 登录 / AES 加密
+- 成绩 / 课表 / 学生信息解析
+- SQLite 本地存储
+- 系统安全存储接口

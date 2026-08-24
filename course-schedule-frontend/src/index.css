@@ -1,48 +1,25 @@
 :root {
-  font-family: Arial, sans-serif; /* Updated font-family */
-  line-height: 1.6; /* Slightly adjusted line-height */
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  line-height: 1.6;
+  color: #1f2937;
+  background-color: #f3f4f6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
-  padding: 20px; /* Added padding */
-  display: flex;
-  flex-direction: column; /* Align items vertically */
-  align-items: center; /* Center content horizontally */
   min-height: 100vh;
-  box-sizing: border-box; /* Include padding in width/height calculations */
+  background-color: #f3f4f6;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-/* General container for the app content if needed, can be applied to a div in App.jsx */
-.app-container {
-  width: 100%;
-  max-width: 1200px; /* Max width for the content */
-  margin: 0 auto; /* Centering content if body is not flex centering */
-  text-align: center; /* Center text within the container */
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+[data-theme='dark'] body,
+[data-theme='dark'] {
+  color: #e2e8f0;
+  background-color: #0f172a;
 }
 
 button {
@@ -52,27 +29,11 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: background-color 0.2s;
 }
-button:hover {
-  border-color: #646cff;
-}
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }

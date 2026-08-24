@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using StudentInfoSystem.Common.Services;
+using StudentInfoSystem.Common.Portal;
 using StudentInfoSystem.GradeService.Services;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using System.IO;
 using System;
 using System.Reflection;
@@ -24,26 +24,24 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<YearRestrictionFilter>();
 });
 
-// 清理重复注册，正确注册服务
-// 1. 浏览器管理器(单例模式)
-builder.Services.AddSingleton<IBrowserManager, BrowserManager>();
-
-// 2. 使用工厂方法注册LoginService，解决字符串参数问题
-builder.Services.AddScoped<LoginService>(provider => {
-    // 获取浏览器管理器实例
-    var browserManager = provider.GetRequiredService<IBrowserManager>();
-    var logger = provider.GetRequiredService<ILogger<LoginService>>();
-    
-    // 从配置获取JWT配置，如果没有则使用默认值
-    string jwtSecret = JwtConfiguration.GetSigningKey(builder.Configuration);
-    string issuer = builder.Configuration["Jwt:Issuer"] ?? "StudentInfoSystem";
-    string audience = builder.Configuration["Jwt:Audience"] ?? "StudentInfoSystemUsers";
-    
-    // 创建LoginService实例，提供所有必要的参数
-    return new LoginService(browserManager, jwtSecret, issuer, audience);
+// 注册学生门户 HTTP 客户端（每个请求独立会话，适合多用户并发）
+builder.Services.AddScoped<IStudentPortalClient>(sp =>
+{
+    var options = new StudentPortalOptions
+    {
+        AuthServerBaseUrl = builder.Configuration["Portal:AuthServerBaseUrl"] ?? "https://authserver.nwupl.edu.cn",
+        EamsBaseUrl = builder.Configuration["Portal:EamsBaseUrl"] ?? "https://tam.nwupl.edu.cn",
+        ServiceUrl = builder.Configuration["Portal:ServiceUrl"] ?? "https://tam.nwupl.edu.cn/eams/homeExt.action",
+        Proxy = builder.Configuration["Portal:Proxy"] ?? "",
+        TimeoutSeconds = int.TryParse(builder.Configuration["Portal:TimeoutSeconds"], out var t) ? t : 60,
+        FingerprintCookies = builder.Configuration["Portal:FingerprintCookies"] ?? "",
+        UserAgent = builder.Configuration["Portal:UserAgent"] ??
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
+    };
+    return new CachedStudentPortalClient(() => new HttpStudentPortalClient(options, sp.GetRequiredService<ILogger<HttpStudentPortalClient>>()));
 });
 
-// 3. GradeService实现
+// GradeService实现
 builder.Services.AddScoped<GradeServiceImpl>();
 
 // 添加Swagger
@@ -111,13 +109,6 @@ app.UseRouting();
 
 // 映射控制器路由
 app.MapControllers();
-
-// 初始化浏览器管理器
-using (var scope = app.Services.CreateScope())
-{
-    var browserManager = scope.ServiceProvider.GetRequiredService<IBrowserManager>();
-    await browserManager.Initialize();
-}
 
 // 运行应用
 app.Run();

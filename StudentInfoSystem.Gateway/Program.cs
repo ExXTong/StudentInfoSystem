@@ -2,9 +2,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using StudentInfoSystem.Common.Security;
+using StudentInfoSystem.Gateway;
 using Yarp.ReverseProxy.Transforms;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Security.Claims;
+using System.Text.Json;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,9 +83,47 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
+app.Use(async (context, next) =>
+{
+    if (HttpMethods.IsPost(context.Request.Method) && context.Request.Path.StartsWithSegments("/api/auth/login"))
+    {
+        context.Request.EnableBuffering();
+        using var reader = new StreamReader(context.Request.Body, System.Text.Encoding.UTF8, leaveOpen: true);
+        var body = await reader.ReadToEndAsync();
+        context.Request.Body.Position = 0;
+        LoginPayload? payload = null;
+        try
+        {
+            payload = JsonSerializer.Deserialize<LoginPayload>(body);
+        }
+        catch
+        {
+        }
+
+        AdminApi.RecordLogin(payload?.Username ?? "unknown");
+        if (AdminApi.IsUserDisabled(payload?.Username))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(new { message = "该用户已被管理员禁用" });
+            return;
+        }
+    }
+    if (context.Request.Path.StartsWithSegments("/api/schedule/get") ||
+        context.Request.Path.StartsWithSegments("/api/grade/query") ||
+        context.Request.Path.StartsWithSegments("/api/student/crawler"))
+    {
+        AdminApi.RecordQuery(context.Request.Path);
+    }
+
+    await next();
+});
+
+
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapAdminApi();
 
 // 配置反向代理
 app.MapReverseProxy(proxyPipeline =>
@@ -104,13 +146,15 @@ app.MapReverseProxy(proxyPipeline =>
         {
             // 尝试从不同的claim类型中获取用户名
             var usernameClaim = context.User.FindFirst("unique_name") // JWT标准claim
-                             ?? context.User.FindFirst("username")    // 自定义claim
-                             ?? context.User.FindFirst("sub");        // 如果其他都没有，使用subject
-                             
+                             ?? context.User.FindFirst("username")     // 自定义claim
+                             ?? context.User.FindFirst("sub")          // 原始subject
+                             ?? context.User.FindFirst(ClaimTypes.NameIdentifier) // JWT映射后的sub
+                             ?? context.User.FindFirst(ClaimTypes.Name);          // JWT映射后的unique_name
+
             if (usernameClaim != null)
             {
-                // 将用户名添加到请求头
-                context.Request.Headers.Add("X-User-Name", usernameClaim.Value);
+                // 将用户名添加到请求头（使用 TryAdd 避免重复）
+                context.Request.Headers.TryAdd("X-User-Name", usernameClaim.Value);
             }
             
             // 添加调试日志
@@ -126,3 +170,10 @@ app.MapReverseProxy(proxyPipeline =>
 });
 
 app.Run();
+internal class LoginPayload
+{
+    [System.Text.Json.Serialization.JsonPropertyName("username")]
+    public string? Username { get; set; }
+    [System.Text.Json.Serialization.JsonPropertyName("password")]
+    public string? Password { get; set; }
+}

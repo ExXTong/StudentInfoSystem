@@ -1,6 +1,6 @@
-using Microsoft.Playwright;
 using StudentInfoSystem.Common.Models;
 using StudentInfoSystem.Common.Services;
+using StudentInfoSystem.Common.Portal;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 
@@ -25,23 +25,14 @@ namespace StudentInfoSystem.GradeService.Services
         private const string LogMsgError = "错误: {ErrorMessage}";
         private const string LogMsgWarning = "警告: {WarningMessage}";
 
-        private readonly IBrowserManager _browserManager;
+        private readonly IStudentPortalClient _portal;
         private readonly ILogger<GradeService>? _logger;
-        private IPage? _currentPage;
-        private readonly string _debugFolder;
         private bool _isDebugEnabled;
 
-        public GradeService(IBrowserManager browserManager, ILogger<GradeService>? logger)
+        public GradeService(IStudentPortalClient portal, ILogger<GradeService>? logger)
         {
-            _browserManager = browserManager ?? throw new ArgumentNullException(nameof(browserManager));
+            _portal = portal ?? throw new ArgumentNullException(nameof(portal));
             _logger = logger;
-            _debugFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "debug_screenshots");
-            _isDebugEnabled = true; // 默认启用调试
-            _currentPage = null; // 初始化为 null
-            
-            // 确保截图保存目录存在
-            if (!Directory.Exists(_debugFolder))
-                Directory.CreateDirectory(_debugFolder);
         }
 
         /// <summary>
@@ -64,129 +55,34 @@ namespace StudentInfoSystem.GradeService.Services
         /// <returns>成绩汇总信息</returns>
         public async Task<GradeSummary> GetGradesAsync(string username, string password, string? year = null, string? term = null, bool allTerms = false)
         {
-            IPage? page = null;
             try
             {
                 LogInfo($"开始为用户 {username} 获取成绩信息...");
-                
-                // 从池中获取页面
-                page = await _browserManager.GetPageAsync();
-                LogInfo($"为用户 {username} 获取到新页面实例");
-                
-                // 使用浏览器管理器进行登录
+
                 LogInfo($"尝试使用账号 {username} 登录系统...");
-                bool loginSuccess = await _browserManager.LoginAsync(username, password, page);
-                
+                bool loginSuccess = await _portal.LoginAsync(username, password);
                 if (!loginSuccess)
                 {
                     LogError($"用户 {username} 登录失败，无法获取成绩信息");
                     throw new Exception("登录失败，请检查用户名和密码");
                 }
-                
-                LogInfo($"用户 {username} 登录成功，准备获取成绩...");
-                _currentPage = page; // 保存当前页面引用用于调试截图
 
-                // 刷新页面以确保获取最新状态
-                LogInfo("刷新页面...");
-                await page.ReloadAsync();
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                
                 LogInfo($"用户 {username} 登录成功，准备获取成绩...");
-                _currentPage = page; // 保存当前页面引用用于调试截图
 
-                // 直接导航到成绩页面URL
-                LogInfo("直接导航到成绩历史页面...");
-                await page.GotoAsync("https://tam.nwupl.edu.cn/eams/teach/grade/course/person!historyCourseGrade.action?projectType=MAJOR");
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                
-                // 捕获可能出现的异常情况
-                if (await page.GetByText("无权访问").IsVisibleAsync())
-                {
-                    LogWarning("当前页面显示'无权访问'，尝试回退到原有导航方式");
-                    // 回退到原有导航方式
-                    await page.ReloadAsync();
-                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                    
-                    // 等待"我的"链接出现并确保可点击
-                    LogInfo("等待'我的'链接可用...");
-                    var myLink = page.GetByRole(AriaRole.Link, new() { Name = "我的", Exact = true });
-                    await myLink.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                    
-                    // 点击"我的"链接
-                    LogInfo("点击'我的'链接...");
-                    await myLink.ClickAsync();
-                    
-                    // 等待"我的成绩"链接出现并确保可点击
-                    LogInfo("等待'我的成绩'链接可用...");
-                    var gradesLink = page.GetByRole(AriaRole.Link, new() { Name = "我的成绩" });
-                    await gradesLink.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                    
-                    // 点击"我的成绩"链接
-                    LogInfo("点击'我的成绩'链接...");
-                    await gradesLink.ClickAsync();
-                    await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                }
-                
-                // 检查页面是否包含成绩信息
-                var hasGradeContent = await page.GetByText("成绩").IsVisibleAsync() || 
-                                    await page.GetByText("学年").IsVisibleAsync() || 
-                                    await page.GetByText("课程").IsVisibleAsync();
-                if (!hasGradeContent)
-                {
-                    LogInfo("直接访问成绩页面未找到成绩内容，检查iframe...");
-                }
-                
-                // 检查是否有iframe
-                IFrame? frame = null;
-                var iframeExists = await page.Locator("iframe[name=\"iframeMain\"]").CountAsync() > 0;
-                
-                if (iframeExists) 
-                {
-                    // 等待iframe加载完成，使用更健壮的等待方式
-                    LogInfo("等待iframe加载完成...");
-                    await page.WaitForSelectorAsync("iframe[name=\"iframeMain\"]", new() { State = WaitForSelectorState.Attached, Timeout = 10000 });
-                    
-                    frame = page.Frame("iframeMain");
-                    if (frame == null)
-                    {
-                        LogWarning("无法通过名称直接获取iframe，尝试备用方法...");
-                        var iframeElement = await page.QuerySelectorAsync("iframe[name=\"iframeMain\"]");
-                        if (iframeElement != null)
-                        {
-                            frame = await iframeElement.ContentFrameAsync();
-                        }
-                    }
-                    
-                    if (frame == null)
-                    {
-                        LogWarning("无法找到成绩iframe，将在主页面中查找成绩表格");
-                    }
-                    else
-                    {
-                        LogInfo("成功获取到iframe");
-                    }
-                }
-                else
-                {
-                    LogInfo("页面中没有发现iframe，直接在主页面解析成绩...");
-                }
-                
-                // 获取页面内容
-                LogInfo("获取成绩页面内容...");
-                string pageContent;
-                
-                if (frame != null)
-                {
-                    pageContent = await frame.EvaluateAsync<string>("() => document.documentElement.outerHTML");
-                }
-                else
-                {
-                    pageContent = await page.ContentAsync();
-                }
-                
-                // 解析成绩数据
-                LogInfo("解析成绩数据...");
-                var grades = ParseGradesFromHtml(pageContent);
+                // 获取成绩页面并解析当前学期
+                var gradePage = await _portal.GetGradePageAsync();
+                var semesterMatch = Regex.Match(gradePage, @"person!search\.action\?semesterId=(\d+)");
+                var semesterId = semesterMatch.Success ? semesterMatch.Groups[1].Value : "";
+                var projectType = "";
+
+                LogInfo($"获取成绩列表，semesterId={semesterId}");
+                var gradeHtml = allTerms
+                    ? await _portal.GetHistoryGradeAsync()
+                    : string.IsNullOrEmpty(semesterId)
+                        ? gradePage
+                        : await _portal.GetGradeSearchAsync(semesterId, projectType);
+
+                var grades = ParseGradesFromHtml(gradeHtml);
 
                 // 根据请求参数过滤学年/学期
                 if (!allTerms)
@@ -202,11 +98,8 @@ namespace StudentInfoSystem.GradeService.Services
                     }
                 }
 
-                // 计算成绩统计信息
-                var summary = CalculateGradeSummary(grades);
-                
                 LogInfo($"成功获取到 {grades.Count} 门课程的成绩信息");
-                return summary;
+                return CalculateGradeSummary(grades);
             }
             catch (Exception ex)
             {
@@ -215,33 +108,7 @@ namespace StudentInfoSystem.GradeService.Services
             }
             finally
             {
-                // 释放页面实例
-                if (page != null)
-                {
-                    try {
-                        // 添加注销操作
-                        LogInfo("正在注销用户...");
-                        bool logoutSuccess = await _browserManager.LogoutAsync(page);
-                        if (logoutSuccess)
-                        {
-                            LogInfo("用户已成功注销");
-                        }
-                        else
-                        {
-                            LogWarning("注销操作可能未成功完成");
-                        }
-                        
-                        // 释放浏览器资源
-                        await _browserManager.ReleaseBrowserAsync(page);
-                        LogInfo("已释放用于获取成绩的页面实例");
-                    }
-                    catch (Exception ex) {
-                        LogError($"释放页面或注销时发生错误: {ex.Message}");
-                    }
-                }
-                
-                // 解除当前页面引用
-                _currentPage = null;
+                await _portal.LogoutAsync();
             }
         }
 

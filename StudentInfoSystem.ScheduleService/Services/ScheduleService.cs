@@ -5,8 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Playwright;
-using StudentInfoSystem.Common.Services;
+using StudentInfoSystem.Common.Portal;
 using StudentInfoSystem.ScheduleService.Models;
 using HtmlAgilityPack;
 
@@ -15,13 +14,12 @@ namespace StudentInfoSystem.ScheduleService.Services
     // 将类名从ScheduleService改为CourseScheduleService
     public class CourseScheduleService
     {
-        private readonly IBrowserManager _browserManager;
+        private readonly IStudentPortalClient _portal;
         private readonly ILogger<CourseScheduleService> _logger;
 
-        // 构造函数也需要更新
-        public CourseScheduleService(IBrowserManager browserManager, ILogger<CourseScheduleService> logger)
+        public CourseScheduleService(IStudentPortalClient portal, ILogger<CourseScheduleService> logger)
         {
-            _browserManager = browserManager;
+            _portal = portal;
             _logger = logger;
         }
 
@@ -32,8 +30,6 @@ namespace StudentInfoSystem.ScheduleService.Services
         /// <returns>课表查询响应</returns>
         public async Task<ScheduleResponse> GetScheduleAsync(ScheduleRequest request)
         {
-            IPage? page = null;
-            
             try
             {
                 if (request == null)
@@ -60,48 +56,51 @@ namespace StudentInfoSystem.ScheduleService.Services
                 }
 
                 _logger.LogInformation($"开始获取用户 {request.Username} 的课表信息");
-                
-                // 从池中获取页面
-                page = await _browserManager.GetPageAsync();
-                _logger.LogInformation($"为用户 {request.Username} 获取到新页面实例");
-                
-                // 使用页面进行登录
-                bool loginSuccess = await _browserManager.LoginAsync(request.Username, request.Password, page);
-                
+
+                bool loginSuccess = await _portal.LoginAsync(request.Username, request.Password);
                 if (!loginSuccess)
                 {
                     _logger.LogWarning($"用户 {request.Username} 登录失败");
-                    return new ScheduleResponse 
-                    { 
-                        Success = false, 
-                        ErrorMessage = "登录失败，请检查用户名和密码" 
+                    return new ScheduleResponse
+                    {
+                        Success = false,
+                        ErrorMessage = "登录失败，请检查用户名和密码"
                     };
                 }
-                
+
                 _logger.LogInformation($"用户 {request.Username} 登录成功，开始获取课表");
-                
-                // 获取课表HTML内容
-                var scheduleHtml = await GetScheduleHtmlAsync(
-                    page, 
-                    request.TableType, 
-                    request.Year, 
-                    request.Term);
-                
+
+                var courseTablePage = await _portal.GetCourseTablePageAsync();
+                var semesterMatch = Regex.Match(courseTablePage, @"name=""semester\.id""\s+value=""([^""]*)""");
+                var semesterId = semesterMatch.Success ? semesterMatch.Groups[1].Value : "";
+
+                var idsMatch = Regex.Match(courseTablePage, @"bg\.form\.addInput\(form,""ids"",""(\d+)""\)");
+                var ids = idsMatch.Success ? idsMatch.Groups[1].Value : (request.TableType == "std" ? "676535" : "2183");
+
+                var projectId = "1";
+                var projectMatch = Regex.Match(courseTablePage, @"name=""project\.id""[^>]*value=""([^""]*)""|value=""(\d+)""[^>]*name=""project\.id""");
+                if (projectMatch.Success)
+                {
+                    projectId = projectMatch.Groups[1].Success ? projectMatch.Groups[1].Value : projectMatch.Groups[2].Value;
+                }
+
+                if (string.IsNullOrEmpty(semesterId))
+                {
+                    // 初始页面 semester.id 由前端 JS 动态填充，这里先回退到常用学期 ID
+                    semesterId = "194";
+                    _logger.LogWarning("课表页面未解析到 semester.id，使用默认 194");
+                }
+
+                var scheduleHtml = await _portal.GetCourseTableDataAsync(semesterId, projectId, ids, request.TableType);
                 if (string.IsNullOrEmpty(scheduleHtml))
                 {
                     _logger.LogWarning($"获取课表HTML内容失败");
-                    return new ScheduleResponse 
-                    { 
-                        Success = false, 
-                        ErrorMessage = "获取课表数据失败" 
-                    };
+                    return new ScheduleResponse { Success = false, ErrorMessage = "获取课表数据失败" };
                 }
-                
-                // 解析课表数据
+
                 var courses = await ParseScheduleHtmlAsync(scheduleHtml);
-                
                 _logger.LogInformation($"成功解析 {courses.Count} 门课程的信息");
-                
+
                 return new ScheduleResponse
                 {
                     Success = true,
@@ -119,138 +118,7 @@ namespace StudentInfoSystem.ScheduleService.Services
             }
             finally
             {
-                // 尝试注销登录
-                if (page != null)
-                {
-                    try
-                    {
-                        _logger.LogInformation($"用户 {request.Username} 操作完成，执行自动注销");
-                        await _browserManager.LogoutAsync(page);
-                        _logger.LogInformation($"用户 {request.Username} 已成功注销");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning($"注销过程中发生错误: {ex.Message}");
-                    }
-                    
-                    // 释放页面实例回池中
-                    await _browserManager.ReleaseBrowserAsync(page);
-                    _logger.LogInformation($"已释放用户 {request.Username} 的页面实例");
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// 获取课表HTML内容
-        /// </summary>
-        private async Task<string> GetScheduleHtmlAsync(IPage page, string tableType, string year, string term)
-        {
-            try
-            {
-                // 等待"我的"链接出现并确保可点击
-                _logger.LogInformation("等待'我的'链接可用...");
-                var myLink = page.GetByRole(AriaRole.Link, new() { Name = "我的", Exact = true });
-                await myLink.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                
-                // 点击"我的"链接
-                _logger.LogInformation("点击'我的'链接...");
-                await myLink.ClickAsync();
-                
-                // 等待"我的课表"链接出现并确保可点击
-                _logger.LogInformation("等待'我的课表'链接可用...");
-                var scheduleLink = page.GetByRole(AriaRole.Link, new() { Name = "我的课表" });
-                await scheduleLink.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                
-                // 点击"我的课表"链接
-                _logger.LogInformation("点击'我的课表'链接...");
-                await scheduleLink.ClickAsync();
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                
-                // 主动关闭下拉菜单
-                _logger.LogInformation("关闭下拉菜单...");
-                var mainTop = page.Locator("#main-top");
-                await mainTop.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 3000 });
-                await mainTop.ClickAsync();
-                
-                // 等待iframe加载完成
-                _logger.LogInformation("等待iframe加载完成...");
-                await page.WaitForSelectorAsync("iframe[name=\"iframeMain\"]", new() { 
-                    State = WaitForSelectorState.Attached, 
-                    Timeout = 10000 
-                });
-                
-                var frame = page.Frame("iframeMain");
-                if (frame == null)
-                {
-                    _logger.LogWarning("无法找到课表iframe，请检查网页结构是否有变化");
-                    return null;
-                }
-                
-                // 等待课表类型选择器可用
-                _logger.LogInformation("等待课表类型选择器可用...");
-                var tableTypeSelector = frame.GetByLabel("课表类型:");
-                await tableTypeSelector.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                
-                // 选择课表类型（学生课表或班级课表）
-                _logger.LogInformation($"选择{(tableType == "std" ? "学生" : "班级")}课表...");
-                await tableTypeSelector.SelectOptionAsync(new[] { tableType });
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                
-                // 等待学年学期选择器可用
-                _logger.LogInformation("等待学年学期选择器可用...");
-                var yearTermSelector = frame.GetByText("学年学期");
-                await yearTermSelector.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                
-                // 点击学年学期选择器
-                _logger.LogInformation("点击学年学期选择器...");
-                await yearTermSelector.ClickAsync();
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                
-                // 选择学年
-                string yearSelector = year.Split('-').Length > 1 ? 
-                                     $"-{year.Split('-')[1]}" : year;
-                _logger.LogInformation($"等待并选择学年: {yearSelector}...");
-                var yearCell = frame.GetByRole(AriaRole.Cell, new() { Name = yearSelector });
-                await yearCell.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                await yearCell.ClickAsync();
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                
-                // 选择学期
-                string termName = term == "1" ? "学期1" : "学期2";
-                _logger.LogInformation($"等待并选择学期: {termName}...");
-                var termCell = frame.GetByRole(AriaRole.Cell, new() { Name = termName });
-                await termCell.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                await termCell.ClickAsync();
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-                
-                // 等待并点击"切换学期"按钮
-                _logger.LogInformation("等待并点击切换学期按钮...");
-                var switchTermButton = frame.GetByRole(AriaRole.Button, new() { Name = "切换学期" });
-                await switchTermButton.WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 5000 });
-                await switchTermButton.ClickAsync();
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
-
-                // 确保课表内容已完全加载
-                _logger.LogInformation("等待课表内容加载完成...");
-                await Task.Delay(2000); // 额外等待一小段时间
-                
-                // 等待课表表格元素加载完成
-                await frame.WaitForSelectorAsync(".gridtable, #kbtable", new() { 
-                    State = WaitForSelectorState.Visible, 
-                    Timeout = 10000 
-                });
-                
-                // 获取完整的HTML内容
-                var scheduleHtml = await frame.EvaluateAsync<string>("() => document.documentElement.outerHTML");
-                _logger.LogInformation("成功获取课表HTML内容");
-                
-                return scheduleHtml;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"获取课表HTML内容时出错: {ex.Message}");
-                return null;
+                await _portal.LogoutAsync();
             }
         }
 

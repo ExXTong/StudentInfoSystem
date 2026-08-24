@@ -1,0 +1,40 @@
+.profile-view {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 24px;
+}
+
+.profile-view button {
+  padding: 10px 20px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.profile-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.profile-card h3 {
+  margin-top: 0;
+  color: #1e293b;
+}
+
+.profile-table td {
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+}
+
+.profile-table td:first-child {
+  width: 140px;
+  background: #f1f5f9;
+  font-weight: 600;
+}

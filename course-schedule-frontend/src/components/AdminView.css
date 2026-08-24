@@ -1,0 +1,299 @@
+.admin-view {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 24px;
+}
+
+.admin-view h2 {
+  margin-top: 0;
+  color: #0f172a;
+}
+
+.admin-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-section h3 {
+  margin-top: 0;
+  color: #334155;
+}
+
+.cache-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cache-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.cache-item span {
+  color: #64748b;
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+.cache-item button {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.clear-all {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.health-card {
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.health-card.ok {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+}
+
+.health-card.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.admin-todo {
+  color: #64748b;
+  padding-left: 20px;
+}
+
+[data-theme='dark'] .admin-view {
+  background: #1e293b;
+}
+
+[data-theme='dark'] .admin-section {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .admin-section h3,
+[data-theme='dark'] .admin-view h2 {
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .cache-item {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .cache-item span {
+  color: #94a3b8;
+}
+
+.admin-message {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.admin-user-list,
+.announcement-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.admin-user-list li {
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+
+.announcement-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.announcement-list li span {
+  flex: 1;
+  color: #475569;
+  font-size: 14px;
+}
+
+.announcement-list li button {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.announcement-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.announcement-form input,
+.announcement-form textarea,
+.settings-editor {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.stats-grid p {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 0;
+  text-align: center;
+}
+
+.secondary-button {
+  background: #64748b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+[data-theme='dark'] .admin-message {
+  background: #1e3a8a;
+  border-color: #1d4ed8;
+  color: #bfdbfe;
+}
+
+[data-theme='dark'] .admin-user-list li,
+[data-theme='dark'] .stats-grid p {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .announcement-form input,
+[data-theme='dark'] .announcement-form textarea,
+[data-theme='dark'] .settings-editor {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .announcement-list li {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.user-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.user-actions button,
+.user-row > button {
+  background: #64748b;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.disabled-users {
+  margin-top: 12px;
+}
+
+.disabled-users h4 {
+  margin: 8px 0;
+  color: #475569;
+}
+
+.login-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.login-history-table th,
+.login-history-table td {
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  text-align: left;
+}
+
+.login-history-table th {
+  background: #f1f5f9;
+}
+
+.backup-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.backup-actions button,
+.import-button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.import-button input {
+  display: none;
+}

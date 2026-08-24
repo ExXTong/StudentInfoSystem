@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Playwright;
 using System.Threading.Tasks;
 using System;
 using StudentInfoSystem.AuthService.Services;
@@ -11,12 +10,10 @@ namespace StudentInfoSystem.AuthService.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IBrowserManager _browserManager;
         private readonly LoginService _loginService;
 
-        public AuthController(IBrowserManager browserManager, LoginService loginService)
+        public AuthController(LoginService loginService)
         {
-            _browserManager = browserManager;
             _loginService = loginService;
         }
 
@@ -73,44 +70,11 @@ namespace StudentInfoSystem.AuthService.Controllers
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public IActionResult Logout()
         {
-            try
-            {
-                Console.WriteLine("------------------------------------");
-                Console.WriteLine("收到注销请求");
-                
-                // 使用LoginService执行注销
-                bool logoutSuccess = await _loginService.LogoutAsync();
-                
-                if (logoutSuccess)
-                {
-                    Console.WriteLine("注销成功，返回200 OK");
-                    return Ok(new { 
-                        success = true, 
-                        message = "注销成功" 
-                    });
-                }
-                
-                Console.WriteLine("注销失败，返回400 Bad Request");
-                return BadRequest(new { 
-                    success = false, 
-                    message = "注销失败，请稍后再试" 
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"注销处理过程中发生未捕获异常: {ex.Message}");
-                return StatusCode(500, new { 
-                    success = false, 
-                    message = $"服务器错误: {ex.Message}" 
-                });
-            }
-            finally
-            {
-                Console.WriteLine("注销请求处理完成");
-                Console.WriteLine("------------------------------------");
-            }
+            Console.WriteLine("收到注销请求");
+            // JWT 无状态注销由前端丢弃 Token 即可，无需调用教务系统
+            return Ok(new { success = true, message = "注销成功" });
         }
 
         [HttpGet("ping")]

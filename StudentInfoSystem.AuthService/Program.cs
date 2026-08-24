@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 //using StudentInfoSystem.Common.Services; // 更新引用
 using StudentInfoSystem.AuthService.Services; // 添加这一行，引入正确的命名空间
 using StudentInfoSystem.Common.Middleware;
+using StudentInfoSystem.Common.Portal;
 using StudentInfoSystem.Common.Security;
 using System.Text;
 
@@ -19,18 +20,32 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 注册BrowserManager作为单例服务
-builder.Services.AddSingleton<IBrowserManager, BrowserManager>();
+// 注册学生门户 HTTP 客户端（每个请求独立会话）
+builder.Services.AddScoped<IStudentPortalClient>(sp =>
+{
+    var options = new StudentPortalOptions
+    {
+        AuthServerBaseUrl = builder.Configuration["Portal:AuthServerBaseUrl"] ?? "https://authserver.nwupl.edu.cn",
+        EamsBaseUrl = builder.Configuration["Portal:EamsBaseUrl"] ?? "https://tam.nwupl.edu.cn",
+        ServiceUrl = builder.Configuration["Portal:ServiceUrl"] ?? "https://tam.nwupl.edu.cn/eams/homeExt.action",
+        Proxy = builder.Configuration["Portal:Proxy"] ?? "",
+        TimeoutSeconds = int.TryParse(builder.Configuration["Portal:TimeoutSeconds"], out var t) ? t : 60,
+        FingerprintCookies = builder.Configuration["Portal:FingerprintCookies"] ?? "",
+        UserAgent = builder.Configuration["Portal:UserAgent"] ??
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
+    };
+    return new CachedStudentPortalClient(() => new HttpStudentPortalClient(options, sp.GetRequiredService<ILogger<HttpStudentPortalClient>>()));
+});
 
 // 注册LoginService服务
 builder.Services.AddScoped<LoginService>(provider => {
     var config = provider.GetRequiredService<IConfiguration>();
-    var browserManager = provider.GetRequiredService<IBrowserManager>();
+    var portal = provider.GetRequiredService<IStudentPortalClient>();
     var jwtSecret = JwtConfiguration.GetSigningKey(config);
     var issuer = config["Jwt:Issuer"] ?? "StudentInfoSystem";
     var audience = config["Jwt:Audience"] ?? "StudentInfoSystemUsers";
     
-    return new LoginService(browserManager, jwtSecret, issuer, audience);
+    return new LoginService(portal, jwtSecret, issuer, audience, config["Admin:Password"]);
 });
 
 // 配置JWT认证

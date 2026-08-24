@@ -17,8 +17,7 @@ const Login = ({ handleLoginSuccess }) => {
         // The backend response for login should ideally include necessary user details (e.g., name, role)
         // For now, we'll construct userCredentials with what we have.
         const userCredentials = { 
-          username: response.user?.username || username, // Prefer response.user.username if available
-          password: password, // Original password as API requires it
+          username: response.user?.username || username,
           name: response.user?.name, 
           role: response.user?.role 
         };

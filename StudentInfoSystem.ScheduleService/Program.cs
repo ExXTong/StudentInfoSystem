@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using StudentInfoSystem.ScheduleService.Services;
-using StudentInfoSystem.Common.Services;
+using StudentInfoSystem.Common.Portal;
 using StudentInfoSystem.Common.Middleware;
 using System.Text;
 
@@ -11,9 +11,22 @@ var builder = WebApplication.CreateBuilder(args);
 // 添加服务到容器
 builder.Services.AddControllers();
 
-// 注册所需服务
-// 使用IBrowserManager接口和BrowserManager实现
-builder.Services.AddSingleton<IBrowserManager, BrowserManager>();
+// 注册学生门户 HTTP 客户端（每个请求独立会话，适合多用户并发）
+builder.Services.AddScoped<IStudentPortalClient>(sp =>
+{
+    var options = new StudentPortalOptions
+    {
+        AuthServerBaseUrl = builder.Configuration["Portal:AuthServerBaseUrl"] ?? "https://authserver.nwupl.edu.cn",
+        EamsBaseUrl = builder.Configuration["Portal:EamsBaseUrl"] ?? "https://tam.nwupl.edu.cn",
+        ServiceUrl = builder.Configuration["Portal:ServiceUrl"] ?? "https://tam.nwupl.edu.cn/eams/homeExt.action",
+        Proxy = builder.Configuration["Portal:Proxy"] ?? "",
+        TimeoutSeconds = int.TryParse(builder.Configuration["Portal:TimeoutSeconds"], out var t) ? t : 60,
+        FingerprintCookies = builder.Configuration["Portal:FingerprintCookies"] ?? "",
+        UserAgent = builder.Configuration["Portal:UserAgent"] ??
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
+    };
+    return new CachedStudentPortalClient(() => new HttpStudentPortalClient(options, sp.GetRequiredService<ILogger<HttpStudentPortalClient>>()));
+});
 
 // CourseScheduleService作为作用域服务注册，每个HTTP请求一个实例
 builder.Services.AddScoped<CourseScheduleService>();

@@ -1,0 +1,195 @@
+.grade-view {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 24px;
+}
+
+.grade-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.grade-controls .control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.grade-controls label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.grade-controls select {
+  min-width: 130px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 9px;
+}
+
+.grade-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.grade-summary p {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  font-weight: 600;
+  color: #1e40af;
+  margin: 0;
+}
+
+.grade-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.grade-table th,
+.grade-table td {
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.grade-table th {
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 600;
+}
+
+.grade-table tr:hover {
+  background: #f8fafc;
+}
+
+[data-theme='dark'] .grade-view,
+[data-theme='dark'] .profile-view {
+  background: #1e293b;
+}
+
+[data-theme='dark'] .grade-controls {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .grade-controls label {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .grade-controls select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .grade-summary p {
+  background: #172554;
+  border-color: #1d4ed8;
+  color: #bfdbfe;
+}
+
+[data-theme='dark'] .grade-table th {
+  background: #0f172a;
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .grade-table td {
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .grade-table tr:hover {
+  background: #0f172a;
+}
+
+[data-theme='dark'] .profile-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .profile-table td {
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .profile-table td:first-child {
+  background: #0f172a;
+}
+
+.grade-distribution {
+  margin-bottom: 20px;
+}
+
+.grade-distribution h3 {
+  color: #334155;
+}
+
+.distribution-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.distribution-label {
+  width: 110px;
+  font-size: 13px;
+  color: #475569;
+  text-align: right;
+}
+
+.distribution-bar-track {
+  flex: 1;
+  background: #e2e8f0;
+  border-radius: 999px;
+  height: 16px;
+  overflow: hidden;
+}
+
+.distribution-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.distribution-count {
+  width: 30px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.grade-controls input[type="password"],
+.profile-view input[type="password"] {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  min-width: 160px;
+}

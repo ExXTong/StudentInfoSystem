@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="StudentInfoSystem.Desktop.SettingsWindow"
+        Title="设置"
+        Width="500"
+        Height="400">
+    <StackPanel Margin="20" Spacing="12">
+        <TextBlock Text="代理地址" />
+        <TextBox x:Name="ProxyBox" Watermark="例如 http://127.0.0.1:7890" />
+        <TextBlock Text="浏览器指纹 Cookie" />
+        <TextBox x:Name="CookieBox" Watermark="粘贴 Cookie 字符串" AcceptsReturn="True" Height="120" TextWrapping="Wrap" />
+        <Button x:Name="SaveButton" Content="保存" HorizontalAlignment="Stretch" />
+    </StackPanel>
+</Window>

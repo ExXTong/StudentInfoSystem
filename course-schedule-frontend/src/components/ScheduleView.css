@@ -1,171 +1,349 @@
 .schedule-view-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  margin: 20px auto;
-  width: 90%;
-  max-width: 800px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #fff; /* Assuming light theme */
-}
-
-.schedule-view-container h2 {
-  color: #333; /* Darker text for heading */
-  margin-bottom: 15px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 24px;
 }
 
 .schedule-controls {
   display: flex;
-  gap: 15px;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
   margin-bottom: 20px;
-  padding: 15px;
-  border-radius: 6px;
-  background-color: #f9f9f9; /* Light background for controls area */
-  width: auto; /* Adjust width as needed, or make it full width */
 }
 
-.schedule-controls div {
+.control-group {
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
-.schedule-controls label {
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #555;
-  font-size: 0.9em;
+.control-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
 }
 
+.control-group select,
 .schedule-controls input[type="text"] {
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-sizing: border-box;
-  width: 120px; /* Fixed width for year/term inputs */
-  color: #333;
-  background-color: #fff;
+  min-width: 130px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 14px;
+  outline: none;
 }
 
-.schedule-controls button {
-  padding: 10px 15px;
-  background-color: #28a745; /* Green for fetch */
-  color: white;
+.schedule-controls button,
+.grade-controls button {
+  padding: 10px 20px;
+  background: #2563eb;
+  color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 0.9em;
-  align-self: flex-end; /* Align button with bottom of taller inputs if any */
+  transition: background 0.2s;
 }
 
-.schedule-controls button:hover {
-  background-color: #218838;
+.schedule-controls button:hover,
+.grade-controls button:hover {
+  background: #1d4ed8;
 }
 
-.schedule-error {
-  color: red;
-  margin-bottom: 15px;
-  padding: 10px;
-  border: 1px solid red;
-  border-radius: 4px;
-  background-color: #ffebeb;
-  width: calc(100% - 20px); /* Full width minus padding */
-  text-align: center;
+.schedule-controls button:disabled,
+.grade-controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.schedule-data {
-  margin-top: 20px;
-  width: 100%;
+.schedule-error,
+.grade-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
 }
 
-.schedule-data h2 { /* Title like "Schedule for 2024-2025, Term 1" */
-  font-size: 1.5em;
-  color: #333;
-  margin-bottom: 20px;
-  text-align: center;
+.schedule-data h2 {
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .course-item {
-  border: 1px solid #e0e0e0;
-  background-color: #fdfdfd;
-  margin-bottom: 20px;
-  padding: 15px;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  transition: box-shadow 0.2s, transform 0.2s;
 }
 
-.course-item h3 { /* Course Name */
-  font-size: 1.3em;
-  color: #0056b3; /* Theme color for course names */
-  margin-top: 0;
-  margin-bottom: 10px;
+.course-item:hover {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
 }
 
-.course-item p {
-  font-size: 0.95em;
-  color: #444;
-  margin: 5px 0;
+.course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.course-item strong {
-  color: #222;
+.course-header h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 18px;
 }
 
-.course-item h4 { /* "Schedule:" heading */
-  font-size: 1.1em;
-  color: #333;
-  margin-top: 15px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 5px;
+.course-credit {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.course-item ul {
-  list-style-type: none;
-  padding-left: 0;
+.course-detail p {
+  margin: 6px 0;
+  color: #475569;
+  font-size: 14px;
 }
 
-.course-item li {
-  font-size: 0.9em;
-  color: #555;
-  padding: 8px;
-  border-bottom: 1px dashed #eee;
-  background-color: #fff;
+.course-detail span {
+  display: inline-block;
+  width: 44px;
+  color: #94a3b8;
+  font-weight: 600;
 }
 
-.course-item li:last-child {
-  border-bottom: none;
-}
-
-.course-item li:nth-child(odd) {
-  background-color: #f9f9f9;
-}
-
-.no-courses-message, .loading-message {
-  margin-top: 15px;
-  font-size: 1em;
-  color: #777;
+.loading-message,
+.no-courses-message,
+.grade-empty,
+.profile-empty {
+  color: #64748b;
   text-align: center;
-  padding: 20px;
-  background-color: #f9f9f9;
-  border: 1px dashed #ddd;
-  border-radius: 4px;
+  padding: 32px;
+  font-size: 15px;
 }
 
-.user-welcome {
+.schedule-table-wrapper {
+  overflow-x: auto;
+}
+
+.timetable {
   width: 100%;
-  text-align: center;
-  padding: 10px 0;
-  margin-bottom: 15px;
-  background-color: #e9ecef; /* Light grey background for welcome message */
-  border-bottom: 1px solid #ddd;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 13px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.user-welcome p {
-  margin: 5px 0;
-  color: #333;
-  font-size: 1em;
+.timetable th,
+.timetable td {
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  text-align: center;
+  vertical-align: top;
+  min-width: 110px;
+  height: 60px;
+}
+
+.timetable th {
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.time-column,
+.time-cell {
+  width: 80px;
+  min-width: 80px;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.course-cell {
+  background: #eff6ff;
+  border-left: 4px solid #2563eb;
+  text-align: left;
+  color: #1e293b;
+}
+
+.timetable-course {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.timetable-course strong {
+  font-size: 14px;
+  color: #1d4ed8;
+}
+
+.timetable-course .weeks {
+  color: #64748b;
+}
+
+.empty-cell {
+  background: #fcfcfd;
+}
+
+[data-theme='dark'] .schedule-view-container,
+[data-theme='dark'] .grade-view,
+[data-theme='dark'] .profile-view {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+[data-theme='dark'] .schedule-controls,
+[data-theme='dark'] .grade-controls {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .control-group label,
+[data-theme='dark'] .checkbox-label {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .control-group select,
+[data-theme='dark'] .schedule-controls input[type="text"],
+[data-theme='dark'] .grade-controls select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .timetable th,
+[data-theme='dark'] .time-cell {
+  background: #0f172a;
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .timetable {
+  background: #1e293b;
+}
+
+[data-theme='dark'] .timetable th,
+[data-theme='dark'] .timetable td {
+  border-color: #334155;
+}
+
+[data-theme='dark'] .course-cell {
+  background: #172554;
+  border-left-color: #3b82f6;
+  color: #e2e8f0;
+}
+
+[data-theme='dark'] .empty-cell {
+  background: #111827;
+}
+
+[data-theme='dark'] .course-item {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+[data-theme='dark'] .course-header h3,
+[data-theme='dark'] .schedule-data h2,
+[data-theme='dark'] .grade-summary p {
+  color: #e2e8f0;
+}
+
+.today-courses {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.today-courses h3 {
+  margin: 0 0 8px;
+  color: #0369a1;
+  font-size: 15px;
+}
+
+.today-course-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.today-course-tag {
+  background: #e0f2fe;
+  color: #075985;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .today-courses {
+  background: #0c4a6e;
+  border-color: #075985;
+}
+
+[data-theme='dark'] .today-courses h3 {
+  color: #7dd3fc;
+}
+
+[data-theme='dark'] .today-course-tag {
+  background: #075985;
+  color: #e0f2fe;
+}
+
+@media (max-width: 640px) {
+  .schedule-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .schedule-controls button {
+    grid-column: 1 / -1;
+  }
+
+  .control-group select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .timetable th,
+  .timetable td {
+    min-width: 90px;
+    padding: 6px;
+  }
+
+  .time-column,
+  .time-cell {
+    width: 54px;
+    min-width: 54px;
+  }
 }

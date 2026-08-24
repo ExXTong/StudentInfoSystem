@@ -1,90 +1,111 @@
-using Microsoft.Playwright;
 using StudentInfoSystem.Common.Models;
-using StudentInfoSystem.Common.Services;
+using StudentInfoSystem.Common.Portal;
 using System;
-using System.Threading.Tasks;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Text;
+using System.IO;
+using System.Text.Json;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.IdentityModel.Tokens;
 
 namespace StudentInfoSystem.AuthService.Services
 {
     public class LoginService
     {
-        private readonly IBrowserManager _browserManager;
+        private static readonly ConcurrentDictionary<string, StoredCredential> SavedCredentials = new(StringComparer.Ordinal);
+        private static readonly string CredentialFile = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "StudentInfoSystem",
+            "credentials.json");
+
+        static LoginService()
+        {
+            try
+            {
+                if (File.Exists(CredentialFile))
+                {
+                    var json = File.ReadAllText(CredentialFile);
+                    var data = JsonSerializer.Deserialize<Dictionary<string, StoredCredential>>(json);
+                    if (data != null)
+                    {
+                        foreach (var kv in data) SavedCredentials[kv.Key] = kv.Value;
+                    }
+                }
+            }
+            catch
+            {
+                // 忽略损坏的凭据文件
+            }
+        }
+        private readonly IStudentPortalClient _portal;
         private readonly string _jwtSecret;
         private readonly string _issuer;
         private readonly string _audience;
+        private readonly string? _adminPassword;
 
-        public LoginService(IBrowserManager browserManager, string jwtSecret, string issuer, string audience)
+        public LoginService(IStudentPortalClient portal, string jwtSecret, string issuer, string audience, string? adminPassword = null)
         {
-            _browserManager = browserManager;
+            _portal = portal;
             _jwtSecret = jwtSecret;
             _issuer = issuer;
             _audience = audience;
+            _adminPassword = adminPassword;
         }
 
         public async Task<LoginResponse> LoginAsync(LoginRequest request)
         {
-            IPage? page = null;
             try
             {
-                // 从池中获取页面
-                page = await _browserManager.GetPageAsync();
-                Console.WriteLine($"为用户 {request.Username} 获取到新页面实例");
-                
-                // 使用页面进行登录
-                bool loginSuccess = await _browserManager.LoginAsync(request.Username, request.Password, page);
-                
-                if (loginSuccess)
+                if (string.Equals(request.Username, "root", StringComparison.OrdinalIgnoreCase))
                 {
-                    // 创建用户信息
-                    var userInfo = new UserInfo
-                    {
-                        UserId = request.Username,
-                        Username = request.Username,
-                        Role = "Student", // 根据实际情况设置角色
-                        Permissions = new List<string> { "view_grades", "view_schedule", "view_info" }
-                    };
+                    return LoginAsRoot(request.Password);
+                }
 
-                    // 生成JWT令牌
-                    var token = GenerateJwtToken(userInfo);
-                    var refreshToken = GenerateRefreshToken();
+                if (SavedCredentials.TryGetValue(request.Username, out var saved) &&
+                    VerifyCredential(saved, request.Password))
+                {
+                    return CreateStudentLoginResponse(request.Username);
+                }
 
-                    // 已获取所需信息，立即执行注销操作
-                    Console.WriteLine($"用户 {request.Username} 已成功获取登录信息，执行自动注销...");
-                    try
-                    {
-                        await _browserManager.LogoutAsync(page);
-                        Console.WriteLine($"用户 {request.Username} 自动注销成功");
-                    }
-                    catch (Exception ex)
-                    {
-                        // 注销失败只记录日志，不影响登录成功的返回
-                        Console.WriteLine($"自动注销过程中出现异常: {ex.Message}");
-                    }
+                bool loginSuccess = await _portal.LoginAsync(request.Username, request.Password);
 
+                if (!loginSuccess)
+                {
                     return new LoginResponse
                     {
-                        Success = true,
-                        Token = token,
-                        RefreshToken = refreshToken,
-                        Expiration = DateTime.UtcNow.AddHours(1),
-                        User = userInfo
+                        Success = false,
+                        ErrorMessage = "登录失败"
                     };
                 }
-                
+
+                SaveCredential(request.Username, request.Password);
+
+                var userInfo = new UserInfo
+                {
+                    UserId = request.Username,
+                    Username = request.Username,
+                    Role = "Student",
+                    Permissions = new List<string> { "view_grades", "view_schedule", "view_info" }
+                };
+
+                var token = GenerateJwtToken(userInfo);
+                var refreshToken = GenerateRefreshToken();
+
                 return new LoginResponse
                 {
-                    Success = false,
-                    ErrorMessage = "登录失败"
+                    Success = true,
+                    Token = token,
+                    RefreshToken = refreshToken,
+                    Expiration = DateTime.UtcNow.AddHours(1),
+                    User = userInfo
                 };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"登录过程中出现异常: {ex.Message}");
                 return new LoginResponse
                 {
                     Success = false,
@@ -93,13 +114,108 @@ namespace StudentInfoSystem.AuthService.Services
             }
             finally
             {
-                // 释放页面实例回池中
-                if (page != null)
-                {
-                    await _browserManager.ReleaseBrowserAsync(page);
-                    Console.WriteLine($"已释放用户 {request.Username} 的页面实例");
-                }
+                await _portal.LogoutAsync();
             }
+        }
+
+
+        private LoginResponse LoginAsRoot(string password)
+        {
+            if (string.IsNullOrEmpty(_adminPassword) || !string.Equals(password, _adminPassword, StringComparison.Ordinal))
+            {
+                return new LoginResponse
+                {
+                    Success = false,
+                    ErrorMessage = "管理员密码错误"
+                };
+            }
+
+            var userInfo = new UserInfo
+            {
+                UserId = "root",
+                Username = "root",
+                Name = "Root Admin",
+                Role = "Admin",
+                Permissions = new List<string> { "admin" }
+            };
+
+            return new LoginResponse
+            {
+                Success = true,
+                Token = GenerateJwtToken(userInfo),
+                RefreshToken = GenerateRefreshToken(),
+                Expiration = DateTime.UtcNow.AddHours(1),
+                User = userInfo
+            };
+        }
+
+
+
+        private static void SaveCredential(string username, string password)
+        {
+            var salt = RandomNumberGenerator.GetBytes(16);
+            var hash = HashPassword(password, salt);
+            SavedCredentials[username] = new StoredCredential
+            {
+                Username = username,
+                PasswordHash = Convert.ToBase64String(hash),
+                Salt = Convert.ToBase64String(salt)
+            };
+
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(CredentialFile)!);
+                var json = JsonSerializer.Serialize(SavedCredentials);
+                File.WriteAllText(CredentialFile, json);
+            }
+            catch
+            {
+                // 写入失败时至少保留内存缓存
+            }
+        }
+
+        private static bool VerifyCredential(StoredCredential credential, string password)
+        {
+            if (credential == null || string.IsNullOrEmpty(credential.PasswordHash) || string.IsNullOrEmpty(credential.Salt))
+            {
+                return false;
+            }
+
+            var salt = Convert.FromBase64String(credential.Salt);
+            var hash = HashPassword(password, salt);
+            return CryptographicOperations.FixedTimeEquals(hash, Convert.FromBase64String(credential.PasswordHash));
+        }
+
+        private static byte[] HashPassword(string password, byte[] salt)
+        {
+            return Rfc2898DeriveBytes.Pbkdf2(password, salt, 100_000, HashAlgorithmName.SHA256, 32);
+        }
+
+        private class StoredCredential
+        {
+            public string Username { get; set; } = "";
+            public string PasswordHash { get; set; } = "";
+            public string Salt { get; set; } = "";
+        }
+
+        private LoginResponse CreateStudentLoginResponse(string username)
+        {
+            var userInfo = new UserInfo
+            {
+                UserId = username,
+                Username = username,
+                Role = "Student",
+                Permissions = new List<string> { "view_grades", "view_schedule", "view_info" }
+            };
+
+            return new LoginResponse
+            {
+                Success = true,
+                Token = GenerateJwtToken(userInfo),
+                RefreshToken = GenerateRefreshToken(),
+                Expiration = DateTime.UtcNow.AddHours(1),
+                User = userInfo
+            };
         }
 
         private string GenerateJwtToken(UserInfo user)
@@ -156,7 +272,7 @@ namespace StudentInfoSystem.AuthService.Services
                     UserId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value,
                     Username = principal.FindFirst(JwtRegisteredClaimNames.UniqueName)?.Value,
                     Role = principal.FindFirst(ClaimTypes.Role)?.Value,
-                    Permissions = new List<string>() // 从claims中获取权限
+                    Permissions = new List<string>()
                 };
 
                 return Task.FromResult(new TokenValidationResponse
@@ -172,41 +288,6 @@ namespace StudentInfoSystem.AuthService.Services
                     IsValid = false,
                     ErrorMessage = ex.Message
                 });
-            }
-        }
-
-        /// <summary>
-        /// 执行注销操作
-        /// </summary>
-        /// <returns>是否成功注销</returns>
-        public async Task<bool> LogoutAsync()
-        {
-            IPage? page = null;
-            try
-            {
-                // 从池中获取页面
-                page = await _browserManager.GetPageAsync();
-                Console.WriteLine("获取到新页面实例用于注销操作");
-                
-                // 使用页面进行注销
-                bool logoutSuccess = await _browserManager.LogoutAsync(page);
-                
-                Console.WriteLine($"注销操作结果: {(logoutSuccess ? "成功" : "失败")}");
-                return logoutSuccess;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"注销过程中出现异常: {ex.Message}");
-                return false;
-            }
-            finally
-            {
-                // 释放页面实例回池中
-                if (page != null)
-                {
-                    await _browserManager.ReleaseBrowserAsync(page);
-                    Console.WriteLine("已释放用于注销的页面实例");
-                }
             }
         }
     }

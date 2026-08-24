@@ -1,24 +1,33 @@
 import React, { useState } from 'react';
 import Login from './components/Login';
-import ScheduleView from './components/ScheduleView';
+import Dashboard from './components/Dashboard';
 import './App.css';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [authToken, setAuthToken] = useState(null); // Add authToken state
-  const [currentUser, setCurrentUser] = useState(null); // Add currentUser state
+  const [authToken, setAuthToken] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // Function to handle successful login
-  const handleLoginSuccess = (token, userCredentials) => { // Accept token and userCredentials
-    setAuthToken(token); // Set authToken
-    setCurrentUser(userCredentials); // Set currentUser
-    setIsLoggedIn(true); // Set isLoggedIn to true
+  const handleLoginSuccess = (token, userCredentials) => {
+    setAuthToken(token);
+    setCurrentUser(userCredentials);
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setAuthToken(null);
+    setCurrentUser(null);
+    setIsLoggedIn(false);
   };
 
   return (
-    <div className="app-container"> {/* Added app-container class */}
+    <div className="app-container">
       {isLoggedIn ? (
-        <ScheduleView authToken={authToken} currentUser={currentUser} /> // Pass authToken and currentUser
+        <Dashboard
+          authToken={authToken}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+        />
       ) : (
         <Login handleLoginSuccess={handleLoginSuccess} />
       )}

@@ -1,6 +1,6 @@
 # NWUPL EAMS HTTP Replica
 
-根据 `tam.nwupl.edu.cn.har` 提取的纯 HTTP 复刻实验脚本，不依赖 Playwright。
+根据 `tam.nwupl.edu.cn.har` / `authserver.nwupl.edu.cn.har` 提取的纯 HTTP 复刻脚本，不依赖 Playwright。
 
 ## 功能
 
@@ -11,26 +11,36 @@ python3 scripts/nwupl_http_replica.py --analyze-har /var/nfs_share/tam.nwupl.edu
 # 离线解析 HAR 中的成绩/课表样例数据
 python3 scripts/nwupl_http_replica.py --parse-har /var/nfs_share/tam.nwupl.edu.cn.har
 
-# 尝试真实 HTTP 登录（需要能访问 authserver.nwupl.edu.cn 的环境）
-python3 scripts/nwupl_http_replica.py --live --username 学号 --password '密码'
+# 尝试真实 HTTP 登录
+python3 scripts/nwupl_http_replica.py --live \
+  --username 学号 \
+  --password '密码' \
+  --proxy http://192.168.0.69:6152
 ```
 
-## 已从 HAR 确认的请求
+## 已确认的请求
 
 1. 登录
    - `POST https://authserver.nwupl.edu.cn/authserver/login?service=...`
-   - 表单：`username`、`password`（加密）、`captcha`、`_eventId=submit`、`cllt=userNameLogin`、`dllt=generalLogin`、`lt`、`execution`
-
+   - 表单：`username`、`password`（AES 加密）、`captcha`、`_eventId=submit`、`cllt=userNameLogin`、`dllt=generalLogin`、`lt`、`execution`
 2. 成绩
    - `GET /eams/teach/grade/course/person.action`
    - `GET /eams/teach/grade/course/person!search.action?semesterId=...&projectType=`
-
 3. 课表
    - `GET /eams/courseTableForStd.action`
    - `POST /eams/courseTableForStd!courseTable.action`
-   - 参数：`ignoreHead=1&setting.kind=std&startWeek=&project.id=1&semester.id=194&ids=676535`
+4. 学籍
+   - `GET /eams/stdDetail.action`
 
-## 当前限制
+## 说明
 
-- 当前环境无法访问 `authserver.nwupl.edu.cn` / `tam.nwupl.edu.cn`，所以不能在线执行完整登录。
-- HAR 中没有登录页 HTML/JS，缺少密码加密算法（RSA 公钥/盐值）。要真正在线复刻登录，需要额外提供登录页 HTML 或该页面的加密 JS。
+- 密码加密：AES-128-CBC/PKCS7，随机前缀 + 随机 IV
+- 登录页会动态下发 `pwdEncryptSalt`，脚本会自动提取
+- 浏览器指纹 Cookie 可绕过验证码
+- 当前环境需要走代理才能访问学校网站
+
+## 本地一键启动
+
+```bash
+./scripts/start-local.sh
+```

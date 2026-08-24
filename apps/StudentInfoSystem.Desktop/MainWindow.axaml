@@ -1,0 +1,35 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StudentInfoSystem.Desktop"
+        x:Class="StudentInfoSystem.Desktop.MainWindow"
+        Title="学生信息服务"
+        Width="900"
+        Height="650">
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Top" Spacing="8">
+            <TextBlock Text="学生信息服务" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBox x:Name="UsernameBox" Watermark="学号" Width="180" />
+                <TextBox x:Name="PasswordBox" Watermark="密码" PasswordChar="*" Width="180" />
+                <Button x:Name="LoginButton" Content="登录" />
+                <Button x:Name="FetchButton" Content="获取数据" IsEnabled="False" />
+                <Button x:Name="ScheduleButton" Content="获取课表" />
+                <Button x:Name="SettingsButton" Content="设置" />
+                <Button x:Name="ExportButton" Content="导出成绩" />
+                <Button x:Name="ClearCacheButton" Content="清除缓存" />
+            </StackPanel>
+            <TextBlock x:Name="StatusText" Foreground="Gray" />
+        </StackPanel>
+        <TabControl>
+            <TabItem Header="成绩">
+                <ListBox x:Name="DataList" />
+            </TabItem>
+            <TabItem Header="课表">
+                <ListBox x:Name="ScheduleList" />
+            </TabItem>
+            <TabItem Header="个人信息">
+                <TextBlock x:Name="ProfileText" TextWrapping="Wrap" FontSize="14" />
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

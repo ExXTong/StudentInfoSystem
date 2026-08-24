@@ -96,6 +96,30 @@ def extract_aes_key(html):
     return None
 
 
+
+
+BROWSER_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    "Accept-Language": "en,zh-CN;q=0.9,zh;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": "1",
+    "sec-ch-ua": '"Not=A?Brand";v="99", "Microsoft Edge";v="151", "Chromium";v="151"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+}
+
+
+def apply_browser_headers(session):
+    for k, v in BROWSER_HEADERS.items():
+        session.headers[k] = v
+
+
 def need_requests():
     if requests is None:
         sys.exit("Python 'requests' module is required. Install with: pip install requests")
@@ -156,6 +180,7 @@ def analyze_har(har_path):
 def live_login(session, username, password, args=None, service_url=EAMS_HOME):
     """Perform CAS login using only HTTP requests."""
     need_requests()
+    apply_browser_headers(session)
 
     print(f"[1] GET login page: {AUTHSERVER_LOGIN}")
     login_url = f"{AUTHSERVER_LOGIN}?service={requests.utils.quote(service_url, safe='')}"
@@ -222,7 +247,12 @@ def live_login(session, username, password, args=None, service_url=EAMS_HOME):
     }
 
     print(f"[2] POST login: {login_url}")
-    r = session.post(login_url, data=data, allow_redirects=False, timeout=30)
+    post_headers = {
+        "Origin": "https://authserver.nwupl.edu.cn",
+        "Referer": login_url,
+        "Content-Type": "application/x-www-form-urlencoded",
+    }
+    r = session.post(login_url, data=data, headers=post_headers, allow_redirects=False, timeout=30)
     print(f"    Status: {r.status_code}")
     loc = r.headers.get("Location", "")
     print(f"    Location: {loc}")
@@ -317,6 +347,7 @@ def main():
     parser.add_argument("--password")
     parser.add_argument("--encrypted-password", help="pre-encrypted password from a fresh HAR")
     parser.add_argument("--aes-key", help="AES key used by the login page (pwdEncryptSalt/pwdDefaultEncryptSalt)")
+    parser.add_argument("--proxy", help="HTTP/HTTPS proxy, e.g. http://192.168.0.69:6152")
     parser.add_argument("--semester-id", default="194")
     parser.add_argument("--project-id", default="1")
     parser.add_argument("--ids", default="676535")
@@ -339,6 +370,11 @@ def main():
         sys.exit("--live requires --username and --password (or --encrypted-password)")
 
     session = requests.Session()
+    if args.proxy:
+        session.proxies = {
+            "http": args.proxy,
+            "https": args.proxy,
+        }
     live_login(session, args.username, args.password, args)
 
     grade_html = fetch_grade(session, args.semester_id)

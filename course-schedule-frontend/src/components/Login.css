@@ -1,61 +1,86 @@
 .login-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  margin: 50px auto;
-  width: 300px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #fff; /* Assuming light theme for form */
+  max-width: 380px;
+  margin: 80px auto;
+  padding: 32px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
 }
 
 .login-container h2 {
-  color: #333; /* Darker text for heading in light theme */
-  margin-bottom: 20px;
+  text-align: center;
+  color: #0f172a;
+  margin-bottom: 24px;
 }
 
-.login-container div {
-  margin-bottom: 15px;
-  width: 100%;
+.login-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .login-container label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #555; /* Darker text for labels */
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
 }
 
 .login-container input[type="text"],
 .login-container input[type="password"] {
-  width: calc(100% - 20px); /* Account for padding */
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  width: 100%;
   box-sizing: border-box;
-  color: #333; /* Input text color */
-  background-color: #fff; /* Input background color */
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.login-container input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
 }
 
 .login-container button {
-  width: 100%;
-  padding: 10px;
-  background-color: #007bff;
-  color: white;
+  padding: 12px;
+  background: #2563eb;
+  color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 1em;
 }
 
 .login-container button:hover {
-  background-color: #0056b3;
+  background: #1d4ed8;
 }
 
 .login-error {
-  color: red;
-  margin-bottom: 15px;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 10px;
+  border-radius: 8px;
   text-align: center;
+}
+
+[data-theme='dark'] .login-container {
+  background: #1e293b;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+
+[data-theme='dark'] .login-container h2 {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .login-container label {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .login-container input[type="text"],
+[data-theme='dark'] .login-container input[type="password"] {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
 }

@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using StudentInfoSystem.Common.Portal;
+using StudentInfoSystem.Portal;
 using StudentInfoSystem.ScheduleService.Models;
 using HtmlAgilityPack;
 

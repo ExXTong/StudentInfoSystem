@@ -4,6 +4,7 @@ using Javax.Crypto;
 using Javax.Crypto.Spec;
 using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using Android.Security.Keystore;
 
@@ -19,22 +20,25 @@ public class SecureCredentialStore
     public SecureCredentialStore(Context context)
     {
         _context = context;
-        _prefs = context.GetSharedPreferences(PrefName, FileCreationMode.Private);
+        _prefs = context.GetSharedPreferences(PrefName, FileCreationMode.Private)!;
     }
 
     public void SavePassword(string username, string password)
     {
         var key = GetOrCreateKey();
-        var cipher = Cipher.GetInstance("AES/GCM/NoPadding");
-        cipher.Init(CipherMode.EncryptMode, key);
+        var iv = RandomNumberGenerator.GetBytes(12);
+
+        var cipher = Cipher.GetInstance("AES/GCM/NoPadding")!;
+        cipher.Init(Javax.Crypto.CipherMode.EncryptMode, key, new GCMParameterSpec(128, iv));
+
         var plain = Encoding.UTF8.GetBytes($"{username}\n{password}");
-        var encrypted = cipher.DoFinal(plain);
+        var encrypted = cipher.DoFinal(plain)!;
 
         using var ms = new MemoryStream();
-        ms.Write(cipher.IV, 0, cipher.IV.Length);
+        ms.Write(iv, 0, iv.Length);
         ms.Write(encrypted, 0, encrypted.Length);
         var data = Convert.ToBase64String(ms.ToArray());
-        _prefs.Edit().PutString("data", data).Apply();
+        _prefs.Edit()!.PutString("data", data)!.Apply();
     }
 
     public (string Username, string Password)? LoadPassword()
@@ -45,15 +49,15 @@ public class SecureCredentialStore
         try
         {
             var key = GetOrCreateKey();
-            var bytes = Convert.FromBase64String(data);
+            var bytes = Convert.FromBase64String(data!);
             var iv = new byte[12];
             Array.Copy(bytes, 0, iv, 0, 12);
             var encrypted = new byte[bytes.Length - 12];
             Array.Copy(bytes, 12, encrypted, 0, encrypted.Length);
 
-            var cipher = Cipher.GetInstance("AES/GCM/NoPadding");
-            cipher.Init(CipherMode.DecryptMode, key, new GCMParameterSpec(128, iv));
-            var plain = cipher.DoFinal(encrypted);
+            var cipher = Cipher.GetInstance("AES/GCM/NoPadding")!;
+            cipher.Init(Javax.Crypto.CipherMode.DecryptMode, key, new GCMParameterSpec(128, iv));
+            var plain = cipher.DoFinal(encrypted)!;
             var text = Encoding.UTF8.GetString(plain);
             var idx = text.IndexOf('\n');
             if (idx <= 0) return null;
@@ -67,21 +71,23 @@ public class SecureCredentialStore
 
     public void Clear()
     {
-        _prefs.Edit().Remove("data").Apply();
+        _prefs.Edit()!.Remove("data")!.Apply();
     }
 
-    private SecretKey GetOrCreateKey()
+    private ISecretKey GetOrCreateKey()
     {
-        var ks = KeyStore.GetInstance("AndroidKeyStore");
+        var ks = KeyStore.GetInstance("AndroidKeyStore")!;
         ks.Load(null);
-        var existing = ks.GetKey(KeyName, null) as SecretKey;
+        var existing = ks.GetKey(KeyName, null) as ISecretKey;
         if (existing != null) return existing;
 
-        var generator = KeyGenerator.GetInstance(KeyProperties.KeyAlgorithmAes, "AndroidKeyStore");
-        generator.Init(new KeyGenParameterSpec.Builder(KeyName, KeyProperties.PurposeEncrypt | KeyProperties.PurposeDecrypt)
+        // API36 绑定的 Builder 构造参数为 KeyStorePurpose 枚举
+        var generator = KeyGenerator.GetInstance(KeyProperties.KeyAlgorithmAes, "AndroidKeyStore")!;
+        generator.Init(new KeyGenParameterSpec.Builder(KeyName,
+                KeyStorePurpose.Encrypt | KeyStorePurpose.Decrypt)
             .SetBlockModes(KeyProperties.BlockModeGcm)
             .SetEncryptionPaddings(KeyProperties.EncryptionPaddingNone)
             .Build());
-        return generator.GenerateKey();
+        return (ISecretKey)generator.GenerateKey()!;
     }
 }

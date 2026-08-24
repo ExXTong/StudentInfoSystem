@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using StudentInfoSystem.Common.Portal;
+using StudentInfoSystem.Portal;
 using StudentInfoSystem.GradeService.Services;
 using Microsoft.OpenApi;
 using System.IO;

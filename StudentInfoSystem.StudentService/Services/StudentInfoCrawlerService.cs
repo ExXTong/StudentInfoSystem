@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StudentInfoSystem.Common.Models;
 using StudentInfoSystem.Common.Services;
-using StudentInfoSystem.Common.Portal;
+using StudentInfoSystem.Portal;
 
 namespace StudentInfoSystem.StudentService.Services
 {

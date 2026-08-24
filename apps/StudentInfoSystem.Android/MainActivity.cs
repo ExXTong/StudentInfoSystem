@@ -1,8 +1,11 @@
 using Android.App;
+using Android.Content;
 using Android.OS;
+using Android.Text;
+using Android.Views;
 using Android.Widget;
 using Microsoft.Extensions.Logging.Abstractions;
-using StudentInfoSystem.Core.Portal;
+using StudentInfoSystem.Portal;
 using StudentInfoSystem.Core.Services;
 using System.Text.RegularExpressions;
 using StudentInfoSystem.Core.Storage;
@@ -24,7 +27,7 @@ public class MainActivity : Activity
     private string? _sessionUsername;
     private string? _sessionPassword;
     private readonly LocalDataStore _store = new();
-    private readonly SecureCredentialStore _encryptedStore;
+    private SecureCredentialStore _encryptedStore;
     private ListView? _listView;
     private Button? _exportButton;
     private Button? _scheduleButton;
@@ -38,13 +41,13 @@ public class MainActivity : Activity
 
         var layout = new LinearLayout(this)
         {
-            Orientation = Orientation.Vertical,
-            Padding = new Android.Graphics.Rect(40, 40, 40, 40)
+            Orientation = Orientation.Vertical
         };
+        layout.SetPadding(40, 40, 40, 40);
 
         var title = new TextView(this) { Text = "学生信息服务", TextSize = 24 };
         _username = new EditText(this) { Hint = "学号" };
-        _password = new EditText(this) { Hint = "密码", InputType = Android.Text.InputTypes.TextVariationPassword };
+        _password = new EditText(this) { Hint = "密码", InputType = InputTypes.ClassText | InputTypes.TextVariationPassword };
         _loginButton = new Button(this) { Text = "登录" };
         _fetchButton = new Button(this) { Text = "获取数据", Enabled = false };
         _settingsButton = new Button(this) { Text = "设置" };
@@ -64,7 +67,7 @@ public class MainActivity : Activity
         layout.AddView(_scheduleButton);
         layout.AddView(_clearButton);
         layout.AddView(_status);
-        layout.AddView(_listView, new LinearLayout.LayoutParams(Android.ViewGroup.LayoutParams.MatchParent, 0, 1f));
+        layout.AddView(_listView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 0, 1f));
 
         _loginButton.Click += OnLoginClick;
         _fetchButton.Click += OnFetchClick;
@@ -146,6 +149,7 @@ public class MainActivity : Activity
         {
             _loginButton.Enabled = true;
         }
+    }
 
     private async System.Threading.Tasks.Task EnsurePortalLoginAsync()
     {
@@ -208,11 +212,10 @@ public class MainActivity : Activity
                 ? $"成绩 {grades.Count} 门，学生：未知"
                 : $"成绩 {grades.Count} 门\n姓名：{student.Name}\n院系：{student.Department}\n专业：{student.Major}";
             _lastGradeText = string.Join("\n", grades.Select(g => $"{g.CourseName} - {g.GradeValue}"));
-            _listView!.Adapter = new ArrayAdapter(this, Android.Resource.Layout.SimpleListItem1,
+            _listView!.Adapter = new ArrayAdapter(this, global::Android.Resource.Layout.SimpleListItem1,
                 grades.Select(g => $"{g.CourseName} - {g.GradeValue}").ToArray());
 
-            var uname = _username?.Text?.Trim() ?? "";
-            if (student != null)
+            var uname = _username?.Text?.Trim() ?? "";            if (student != null)
             {
                 _store.SaveStudentInfo(uname, student);
                 _store.SaveGrades(uname, grades);
@@ -226,6 +229,7 @@ public class MainActivity : Activity
         {
             _fetchButton.Enabled = true;
         }
+    }
 
     private string GetPrefs(string key, string def)
     {
@@ -244,13 +248,13 @@ public class MainActivity : Activity
         var proxyInput = new EditText(this) { Hint = "代理地址", Text = GetPrefs("proxy", "") };
         var cookieInput = new EditText(this) { Hint = "浏览器指纹 Cookie", Text = GetPrefs("cookie", "") };
 
-        var dialog = new Android.App.AlertDialog.Builder(this);
+        var dialog = new AlertDialog.Builder(this);
         dialog.SetTitle("设置");
         var settingsLayout = new LinearLayout(this)
         {
-            Orientation = Orientation.Vertical,
-            Padding = new Android.Graphics.Rect(40, 20, 40, 20)
+            Orientation = Orientation.Vertical
         };
+        settingsLayout.SetPadding(40, 20, 40, 20);
         settingsLayout.AddView(proxyInput);
         settingsLayout.AddView(cookieInput);
         dialog.SetView(settingsLayout);
@@ -271,10 +275,10 @@ public class MainActivity : Activity
             return;
         }
 
-        var sendIntent = new Android.Content.Intent(Android.Content.Intent.ActionSend);
+        var sendIntent = new Intent(Intent.ActionSend);
         sendIntent.SetType("text/plain");
-        sendIntent.PutExtra(Android.Content.Intent.ExtraText, _lastGradeText);
-        StartActivity(Android.Content.Intent.CreateChooser(sendIntent, "导出成绩"));
+        sendIntent.PutExtra(Intent.ExtraText, _lastGradeText);
+        StartActivity(Intent.CreateChooser(sendIntent, "导出成绩"));
     }
 
     private async void OnScheduleClick(object? sender, System.EventArgs e)
@@ -298,7 +302,7 @@ public class MainActivity : Activity
             var html = await _portal.GetCourseTableDataAsync(semesterId, "1", ids, "std");
             var list = SimpleScheduleParser.ParseScheduleSummary(html ?? "");
             _status.Text = $"课表课程 {list.Count} 条";
-            _listView!.Adapter = new ArrayAdapter(this, Android.Resource.Layout.SimpleListItem1,
+            _listView!.Adapter = new ArrayAdapter(this, global::Android.Resource.Layout.SimpleListItem1,
                 list.Count == 0 ? new[] { "未解析到课程数据" } : list.ToArray());
         }
         catch (System.Exception ex)
@@ -321,6 +325,7 @@ public class MainActivity : Activity
         }
 
         _store.ClearUserData(uname);
+        _store.ClearCredentials();
         _encryptedStore.Clear();
         _sessionUsername = null;
         _sessionPassword = null;
@@ -328,6 +333,5 @@ public class MainActivity : Activity
         _portalLoggedIn = false;
         _listView!.Adapter = null;
         _status.Text = "本地缓存和内存凭据已清除";
-    }
     }
 }

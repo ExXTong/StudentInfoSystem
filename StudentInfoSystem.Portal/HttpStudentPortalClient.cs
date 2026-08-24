@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace StudentInfoSystem.Common.Portal
+namespace StudentInfoSystem.Portal
 {
     /// <summary>
     /// 基于 HttpClient + CookieContainer 的学生门户客户端，不依赖 Playwright。

@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace StudentInfoSystem.Common.Portal
+namespace StudentInfoSystem.Portal
 {
     public interface IStudentPortalClient
     {

@@ -3,7 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 //using StudentInfoSystem.Common.Services; // 更新引用
 using StudentInfoSystem.AuthService.Services; // 添加这一行，引入正确的命名空间
 using StudentInfoSystem.Common.Middleware;
-using StudentInfoSystem.Common.Portal;
+using StudentInfoSystem.Portal;
 using StudentInfoSystem.Common.Security;
 using System.Text;
 

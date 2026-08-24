@@ -13,4 +13,8 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\StudentInfoSystem.Portal\StudentInfoSystem.Portal.csproj" />
+  </ItemGroup>
+
 </Project>

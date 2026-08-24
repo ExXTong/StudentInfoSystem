@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using StudentInfoSystem.StudentService.Services;
-using StudentInfoSystem.Common.Portal;
+using StudentInfoSystem.Portal;
 using StudentInfoSystem.Common.Middleware;
 using StudentInfoSystem.Common.Security;
 using System.Text;

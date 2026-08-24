@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace StudentInfoSystem.Common.Portal
+namespace StudentInfoSystem.Portal
 {
     /// <summary>
     /// 学生门户 HTTP 客户端配置。

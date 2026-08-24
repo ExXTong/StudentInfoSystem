@@ -119,6 +119,19 @@ public class LocalDataStore
         command.ExecuteNonQuery();
     }
 
+    /// <summary>
+    /// 删除本地保存的凭据记录（SaveCredentials 写入的 'default' 行）。
+    /// 注意 ClearUserData 按 username 删除，不会覆盖到这一行。
+    /// </summary>
+    public void ClearCredentials()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM user_data WHERE username='default' AND key='credentials';";
+        command.ExecuteNonQuery();
+    }
+
     private void Save<T>(string username, string key, T data)
     {
         var json = JsonSerializer.Serialize(data);

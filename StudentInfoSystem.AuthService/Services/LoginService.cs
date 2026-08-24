@@ -1,5 +1,5 @@
 using StudentInfoSystem.Common.Models;
-using StudentInfoSystem.Common.Portal;
+using StudentInfoSystem.Portal;
 using System;
 using System.IO;
 using System.Text.Json;

@@ -10,7 +10,8 @@
 | 桌面端 | Avalonia UI | 单用户本地 App |
 | Android | .NET Android | 单用户本地 App |
 | iOS | .NET iOS | 单用户本地 App |
-| 核心库 | StudentInfoSystem.Core | 三端共享登录/抓取/解析/存储 |
+| 核心库 | StudentInfoSystem.Core | 本地存储/会话逻辑 |
+| 门户库 | StudentInfoSystem.Portal | 唯一 HTTP 客户端/解析器/模型（Web 与 App 共用） |
 
 ## 运行环境要求
 
@@ -95,7 +96,8 @@ apps/README.md
 ## 核心库
 
 ```text
-StudentInfoSystem.Core
+StudentInfoSystem.Core   本地存储/会话逻辑
+StudentInfoSystem.Portal 唯一的 HTTP 客户端/解析器/模型
 ```
 
 包含：

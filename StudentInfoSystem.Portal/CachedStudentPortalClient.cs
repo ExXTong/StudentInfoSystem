@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace StudentInfoSystem.Common.Portal
+namespace StudentInfoSystem.Portal
 {
     /// <summary>
     /// 为学生门户客户端增加短期会话缓存，避免同一用户每次请求都重新登录。
@@ -71,6 +71,11 @@ namespace StudentInfoSystem.Common.Portal
             {
                 var entry = new Entry(client);
                 _entry = entry;
+                if (Cache.TryGetValue(username, out var previous))
+                {
+                    // 释放被替换的旧会话（已过期或并发重复登录），避免连接泄漏
+                    try { previous.Client.Dispose(); } catch { }
+                }
                 Cache[username] = entry;
             }
 

@@ -3,7 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging.Abstractions;
-using StudentInfoSystem.Core.Portal;
+using StudentInfoSystem.Portal;
 using StudentInfoSystem.Core.Services;
 using StudentInfoSystem.Core.Storage;
 
@@ -216,6 +216,7 @@ public partial class MainWindow : Window
         }
 
         _store.ClearUserData(username);
+        _store.ClearCredentials();
         _encryptedStore.Clear();
         DataList.ItemsSource = null;
         ProfileText.Text = "";

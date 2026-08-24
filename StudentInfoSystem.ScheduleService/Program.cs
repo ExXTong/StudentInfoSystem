@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using StudentInfoSystem.ScheduleService.Services;
-using StudentInfoSystem.Common.Portal;
+using StudentInfoSystem.Portal;
 using StudentInfoSystem.Common.Middleware;
 using System.Text;
 
